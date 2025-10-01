@@ -1,0 +1,122 @@
+<div class="account-pages my-5 pt-sm-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6 col-xl-5">
+        <div class="card overflow-hidden">
+          <div class="bg-primary-subtle">
+            <!-- Optional: Add welcome banner here -->
+          </div>
+          <div class="card-body pt-0">
+            <div>
+              <a routerLink="/">
+                <div class="avatar-md profile-user-wid mb-4">
+                  <span class="avatar-title rounded-circle bg-light">
+                    <img src="assets/images/logo.png" alt="" class="rounded-circle" height="34">
+                  </span>
+                </div>
+              </a>
+            </div>
+            <div class="p-2">
+              <form class="form-horizontal" [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+                
+                <!-- Error Alert -->
+                <div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+                  <i class="mdi mdi-alert me-2"></i>{{ error }}
+                  <button type="button" class="btn-close" (click)="error = ''" aria-label="Close"></button>
+                </div>
+
+                <!-- Email Field -->
+                <div class="mb-3">
+                  <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                  <input 
+                    type="email" 
+                    formControlName="email" 
+                    class="form-control" 
+                    id="email" 
+                    placeholder="Enter your email"
+                    (input)="onInputChange()"
+                    [class.is-invalid]="submitted && f['email'].errors" />
+                  <div *ngIf="submitted && f['email'].errors" class="invalid-feedback">
+                    <div *ngIf="f['email'].errors?.['required']">Email is required</div>
+                    <div *ngIf="f['email'].errors?.['email']">Please enter a valid email address</div>
+                  </div>
+                </div>
+
+                <!-- Password Field -->
+                <div class="mb-3">
+                  <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                  <div class="input-group auth-pass-inputgroup">
+                    <input 
+                      [type]="fieldTextType ? 'text' : 'password'" 
+                      class="form-control" 
+                      formControlName="password"
+                      id="password"
+                      placeholder="Enter your password" 
+                      (input)="onInputChange()"
+                      [class.is-invalid]="submitted && f['password'].errors">
+
+                    <button class="btn btn-light ms-0" type="button" id="password-addon" 
+                            (click)="toggleFieldTextType()" 
+                            title="Show/Hide Password">
+                      <i class="mdi" 
+                         [class.mdi-eye-outline]="!fieldTextType" 
+                         [class.mdi-eye-off-outline]="fieldTextType"></i>
+                    </button>
+                  </div>
+                  <div *ngIf="submitted && f['password'].errors" class="invalid-feedback d-block">
+                    <div *ngIf="f['password'].errors?.['required']">Password is required</div>
+                    <div *ngIf="f['password'].errors?.['minlength']">Password must be at least 6 characters</div>
+                  </div>
+                </div>
+
+                <!-- Remember Me -->
+                <div class="form-check mb-3">
+                  <input class="form-check-input" type="checkbox" id="remember-check">
+                  <label class="form-check-label" for="remember-check">
+                    Remember me
+                  </label>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div *ngIf="loading" class="text-center mb-3">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                  <p class="text-muted mt-2 mb-0">Signing you in...</p>
+                </div>
+
+                <!-- Login Button -->
+                <div class="mt-3 d-grid">
+                  <button class="btn btn-primary waves-effect waves-light" 
+                          type="submit" 
+                          [disabled]="loading">
+                    <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    <i *ngIf="!loading" class="mdi mdi-login me-1"></i>
+                    {{ loading ? 'Signing in...' : 'Sign In' }}
+                  </button>
+                </div>
+
+                <!-- Forgot Password Link -->
+                <div class="mt-4 text-center">
+                  <a routerLink="/auth/reset-password" class="text-muted">
+                    <i class="mdi mdi-lock me-1"></i>Forgot your password?
+                  </a>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Signup Link -->
+        <div class="mt-5 text-center">
+          <p class="text-muted">
+            Don't have an account? 
+            <a (click)="goToSignup()" class="fw-medium text-primary cursor-pointer">
+              Sign up now
+            </a> 
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

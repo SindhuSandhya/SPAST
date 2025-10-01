@@ -1,0 +1,412 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="card-title mb-0">Tenants Data Table</h4>
+            <button class="btn btn-primary btn-sm" (click)="refresh()" [disabled]="loading">
+              <i class="mdi mdi-refresh" [class.mdi-spin]="loading"></i>
+              {{ loading ? 'Loading...' : 'Refresh' }}
+            </button>
+          </div>
+
+          <!-- Success Message Toast (Top Right) -->
+          <div *ngIf="showSuccessMessage" 
+               class="alert alert-success alert-dismissible fade show position-fixed success-toast" 
+               role="alert">
+            <div class="d-flex align-items-center">
+              <i class="mdi mdi-check-circle me-2 h5 mb-0 text-success"></i>
+              <div class="flex-grow-1">
+                <strong>Success!</strong> {{ successMessage }}
+              </div>
+              <button type="button" class="btn-close" (click)="hideSuccessMessage()" aria-label="Close"></button>
+            </div>
+          </div>
+
+          <!-- Alternative: Inline Success Message (uncomment if you prefer this instead of toast)
+          <div *ngIf="showSuccessMessage" class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+            <div class="d-flex align-items-center">
+              <i class="mdi mdi-check-circle-outline me-2"></i>
+              <strong>Success!</strong> {{ successMessage }}
+              <button type="button" class="btn-close ms-auto" (click)="hideSuccessMessage()" aria-label="Close"></button>
+            </div>
+          </div>
+          -->
+
+          <!-- Error Alert -->
+          <div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+              <i class="mdi mdi-alert-circle-outline me-2"></i>
+              {{ error }}
+              <button type="button" class="btn-close ms-auto" (click)="error = ''" aria-label="Close"></button>
+            </div>
+          </div>
+
+          <div class="row mb-md-2">
+            <!-- Page size -->
+            <div class="col-sm-12 col-md-6">
+              <label class="d-inline-flex align-items-center">Show
+                <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="form-control form-control-sm mx-2">
+                  <option [ngValue]="10">10</option>
+                  <option [ngValue]="25">25</option>
+                  <option [ngValue]="50">50</option>
+                </select> entries
+              </label>
+            </div>
+
+            <!-- Search -->
+            <div class="col-sm-12 col-md-6 text-md-end">
+              <label class="d-inline-flex align-items-center">Search:
+                <input type="text" [(ngModel)]="searchTerm" (input)="applyFilter()"
+                  class="form-control form-control-sm ms-2" 
+                  placeholder="Search tenants..." />
+              </label>
+            </div>
+          </div>
+
+          <!-- Loading State -->
+          <div *ngIf="loading" class="text-center p-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 mb-0">Loading tenants...</p>
+          </div>
+
+          <!-- Table -->
+          <div *ngIf="!loading" class="table-responsive">
+            <table class="table table-bordered dt-responsive nowrap datatables no-footer dtr-inline">
+              <thead class="table-light">
+                <tr>
+                  <th>Tenant ID</th>
+                  <th>Company Name</th>
+                  <th>Type</th>
+                  <th>Contact Person</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>GST No</th>
+                  <th>Status</th>
+                  <th>Created On</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let tenant of paginatedTenants; trackBy: trackByTenantId">
+                  <td>
+                    <span class="badge bg-info">{{ tenant.tenantId }}</span>
+                  </td>
+                  <td>
+                    <strong>{{ tenant.companyName }}</strong>
+                    <small class="d-block text-muted">{{ tenant.address }}</small>
+                  </td>
+                  <td>{{ tenant.typeOfEstablishment }}</td>
+                  <td>{{ tenant.contactPersonName }}</td>
+                  <td>
+                    <a [href]="'mailto:' + tenant.contactEmail" class="text-primary">
+                      {{ tenant.contactEmail }}
+                    </a>
+                  </td>
+                  <td>
+                    <a [href]="'tel:' + tenant.contactPhoneNumber" class="text-primary">
+                      {{ tenant.contactPhoneNumber }}
+                    </a>
+                  </td>
+                  <td>
+                    <code>{{ tenant.gstNo }}</code>
+                  </td>
+                  <td>
+                    <span class="badge bg-success" *ngIf="tenant.isActive">
+                      <i class="mdi mdi-check-circle me-1"></i>Active
+                    </span>
+                    <span class="badge bg-danger" *ngIf="!tenant.isActive">
+                      <i class="mdi mdi-close-circle me-1"></i>Inactive
+                    </span>
+                  </td>
+                  <td>
+                    <small>{{ formatDate(tenant.createdOn) }}</small>
+                    <div class="text-muted" style="font-size: 0.75rem;">
+                      by {{ tenant.createdBy }}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="dropdown">
+                      <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                        type="button" 
+                        data-bs-toggle="dropdown" 
+                        aria-expanded="false">
+                        <i class="mdi mdi-dots-vertical"></i>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-end">
+                        <a class="dropdown-item" href="javascript:void(0);" (click)="editTenant(tenant)">
+                          <i class="mdi mdi-pencil me-2"></i>Edit
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-danger" href="javascript:void(0);" (click)="deleteTenant(tenant)">
+                          <i class="mdi mdi-delete me-2"></i>Delete
+                        </a>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                
+                <!-- Empty State -->
+                <tr *ngIf="paginatedTenants.length === 0">
+                  <td colspan="10" class="text-center py-4">
+                    <div class="text-muted">
+                      <i class="mdi mdi-database-search h1 d-block mb-2"></i>
+                      <p class="mb-0">{{ searchTerm ? 'No tenants found matching your search.' : 'No tenants available.' }}</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div *ngIf="!loading && totalRecords > 0" class="row justify-content-between align-items-center mt-3">
+            <!-- <div class="col-sm-12 col-md-5">
+              <div class="dataTables_info">
+                Showing <strong>{{ (page - 1) * pageSize + 1 }}</strong> to 
+                <strong>{{ Math.min(page * pageSize, totalRecords) }}</strong> of 
+                <strong>{{ totalRecords }}</strong> entries
+                <span *ngIf="searchTerm" class="text-muted"> (filtered from {{ tenants.length }} total)</span>
+              </div>
+            </div> -->
+            <div class="col-sm-12 col-md-7">
+              <div class="dataTables_paginate paging_simple_numbers">
+                <nav aria-label="Table pagination">
+                  <ul class="pagination pagination-rounded justify-content-end mb-0">
+                    <!-- First Page -->
+                    <li class="page-item" [class.disabled]="page === 1">
+                      <a class="page-link" href="javascript:void(0);" (click)="page = 1" 
+                         [attr.aria-disabled]="page === 1">
+                        <i class="mdi mdi-chevron-double-left"></i>
+                      </a>
+                    </li>
+                    
+                    <!-- Previous Page -->
+                    <li class="page-item" [class.disabled]="page === 1">
+                      <a class="page-link" href="javascript:void(0);" (click)="previousPage()" 
+                         [attr.aria-disabled]="page === 1">
+                        <i class="mdi mdi-chevron-left"></i>
+                      </a>
+                    </li>
+                    
+                    <!-- Page Numbers -->
+                    <ng-container *ngIf="totalPages <= 7">
+                      <!-- Show all pages if total pages <= 7 -->
+                      <li *ngFor="let pageNum of getPageNumbers()" 
+                          class="page-item" [class.active]="pageNum === page">
+                        <a class="page-link" href="javascript:void(0);" 
+                           (click)="goToPage(pageNum)">{{ pageNum }}</a>
+                      </li>
+                    </ng-container>
+                    
+                    <ng-container *ngIf="totalPages > 7">
+                      <!-- Complex pagination for many pages -->
+                      
+                      <!-- First page -->
+                      <li class="page-item" [class.active]="page === 1">
+                        <a class="page-link" href="javascript:void(0);" (click)="goToPage(1)">1</a>
+                      </li>
+                      
+                      <!-- Ellipsis after first page if needed -->
+                      <li *ngIf="page > 4" class="page-item disabled">
+                        <span class="page-link">...</span>
+                      </li>
+                      
+                      <!-- Pages around current page -->
+                      <ng-container *ngFor="let pageNum of getVisiblePages()">
+                        <li *ngIf="pageNum > 1 && pageNum < totalPages" 
+                            class="page-item" [class.active]="pageNum === page">
+                          <a class="page-link" href="javascript:void(0);" 
+                             (click)="goToPage(pageNum)">{{ pageNum }}</a>
+                        </li>
+                      </ng-container>
+                      
+                      <!-- Ellipsis before last page if needed -->
+                      <li *ngIf="page < totalPages - 3" class="page-item disabled">
+                        <span class="page-link">...</span>
+                      </li>
+                      
+                      <!-- Last page -->
+                      <li *ngIf="totalPages > 1" class="page-item" [class.active]="page === totalPages">
+                        <a class="page-link" href="javascript:void(0);" 
+                           (click)="goToPage(totalPages)">{{ totalPages }}</a>
+                      </li>
+                    </ng-container>
+                    
+                    <!-- Next Page -->
+                    <li class="page-item" [class.disabled]="page >= totalPages">
+                      <a class="page-link" href="javascript:void(0);" (click)="nextPage()" 
+                         [attr.aria-disabled]="page >= totalPages">
+                        <i class="mdi mdi-chevron-right"></i>
+                      </a>
+                    </li>
+                    
+                    <!-- Last Page -->
+                    <li class="page-item" [class.disabled]="page >= totalPages">
+                      <a class="page-link" href="javascript:void(0);" (click)="page = totalPages" 
+                         [attr.aria-disabled]="page >= totalPages">
+                        <i class="mdi mdi-chevron-double-right"></i>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Tenant Modal -->
+  <div class="modal fade" [class.show]="showEditModal" [style.display]="showEditModal ? 'block' : 'none'" 
+       tabindex="-1" role="dialog" aria-labelledby="editTenantModalLabel" [attr.aria-hidden]="!showEditModal">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="editTenantModalLabel">
+            <i class="mdi mdi-pencil me-2"></i>Edit Tenant
+          </h4>
+          <button type="button" class="btn-close" (click)="closeEditModal()" aria-label="Close"></button>
+        </div>
+        
+        <form [formGroup]="editForm" (ngSubmit)="updateTenant()" novalidate>
+          <div class="modal-body">
+            
+            <!-- Error Alert -->
+            <div *ngIf="editError" class="alert alert-danger alert-dismissible fade show" role="alert">
+              <i class="mdi mdi-alert me-2"></i>{{ editError }}
+              <button type="button" class="btn-close" (click)="editError = ''" aria-label="Close"></button>
+            </div>
+
+            <div class="row">
+              <!-- Tenant ID (readonly) -->
+              <div class="col-md-6 mb-3">
+                <label for="editTenantId" class="form-label">Tenant ID</label>
+                <input type="text" formControlName="tenantId" class="form-control" id="editTenantId" readonly>
+              </div>
+              
+              <!-- Company Name -->
+              <div class="col-md-6 mb-3">
+                <label for="editCompanyName" class="form-label">Company Name <span class="text-danger">*</span></label>
+                <input type="text" formControlName="companyName" class="form-control" 
+                       [class.is-invalid]="hasEditFieldError('companyName')"
+                       id="editCompanyName" placeholder="Enter company name">
+                <div *ngIf="hasEditFieldError('companyName')" class="invalid-feedback">
+                  {{ getEditFieldError('companyName') }}
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Type of Establishment -->
+              <div class="col-md-6 mb-3">
+                <label for="editTypeOfEstablishment" class="form-label">Type of Establishment <span class="text-danger">*</span></label>
+                <input type="text" formControlName="typeOfEstablishment" class="form-control"
+                       [class.is-invalid]="hasEditFieldError('typeOfEstablishment')"
+                       id="editTypeOfEstablishment" placeholder="Enter type">
+                <div *ngIf="hasEditFieldError('typeOfEstablishment')" class="invalid-feedback">
+                  {{ getEditFieldError('typeOfEstablishment') }}
+                </div>
+              </div>
+              
+              <!-- CIN -->
+              <div class="col-md-6 mb-3">
+                <label for="editCin" class="form-label">CIN</label>
+                <input type="text" formControlName="cin" class="form-control" id="editCin" placeholder="Enter CIN">
+              </div>
+            </div>
+
+            <!-- Address -->
+            <div class="mb-3">
+              <label for="editAddress" class="form-label">Address <span class="text-danger">*</span></label>
+              <textarea formControlName="address" class="form-control" 
+                        [class.is-invalid]="hasEditFieldError('address')"
+                        id="editAddress" rows="2" placeholder="Enter address"></textarea>
+              <div *ngIf="hasEditFieldError('address')" class="invalid-feedback">
+                {{ getEditFieldError('address') }}
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- GST No -->
+              <div class="col-md-6 mb-3">
+                <label for="editGstNo" class="form-label">GST No <span class="text-danger">*</span></label>
+                <input type="text" formControlName="gstNo" class="form-control"
+                       [class.is-invalid]="hasEditFieldError('gstNo')"
+                       id="editGstNo" placeholder="Enter GST No">
+                <div *ngIf="hasEditFieldError('gstNo')" class="invalid-feedback">
+                  {{ getEditFieldError('gstNo') }}
+                </div>
+              </div>
+              
+              <!-- PAN -->
+              <div class="col-md-6 mb-3">
+                <label for="editPan" class="form-label">PAN <span class="text-danger">*</span></label>
+                <input type="text" formControlName="pan" class="form-control"
+                       [class.is-invalid]="hasEditFieldError('pan')"
+                       id="editPan" placeholder="Enter PAN">
+                <div *ngIf="hasEditFieldError('pan')" class="invalid-feedback">
+                  {{ getEditFieldError('pan') }}
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Contact Person Name -->
+              <div class="col-md-6 mb-3">
+                <label for="editContactPersonName" class="form-label">Contact Person Name <span class="text-danger">*</span></label>
+                <input type="text" formControlName="contactPersonName" class="form-control"
+                       [class.is-invalid]="hasEditFieldError('contactPersonName')"
+                       id="editContactPersonName" placeholder="Enter name">
+                <div *ngIf="hasEditFieldError('contactPersonName')" class="invalid-feedback">
+                  {{ getEditFieldError('contactPersonName') }}
+                </div>
+              </div>
+              
+              <!-- Contact Phone Number -->
+              <div class="col-md-6 mb-3">
+                <label for="editContactPhoneNumber" class="form-label">Contact Phone Number <span class="text-danger">*</span></label>
+                <input type="text" formControlName="contactPhoneNumber" class="form-control"
+                       [class.is-invalid]="hasEditFieldError('contactPhoneNumber')"
+                       id="editContactPhoneNumber" placeholder="Enter phone number">
+                <div *ngIf="hasEditFieldError('contactPhoneNumber')" class="invalid-feedback">
+                  {{ getEditFieldError('contactPhoneNumber') }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Contact Email -->
+            <div class="mb-3">
+              <label for="editContactEmail" class="form-label">Contact Email <span class="text-danger">*</span></label>
+              <input type="email" formControlName="contactEmail" class="form-control"
+                     [class.is-invalid]="hasEditFieldError('contactEmail')"
+                     id="editContactEmail" placeholder="Enter email">
+              <div *ngIf="hasEditFieldError('contactEmail')" class="invalid-feedback">
+                {{ getEditFieldError('contactEmail') }}
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light waves-effect" (click)="closeEditModal()">
+              <i class="mdi mdi-close me-1"></i>Cancel
+            </button>
+            <button type="submit" class="btn btn-primary waves-effect waves-light" [disabled]="editLoading">
+              <span *ngIf="editLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+              <i *ngIf="!editLoading" class="mdi mdi-content-save me-1"></i>
+              {{ editLoading ? 'Updating...' : 'Update Tenant' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Backdrop -->
+  <div *ngIf="showEditModal" class="modal-backdrop fade show"></div>
+</div>

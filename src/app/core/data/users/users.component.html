@@ -1,0 +1,425 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="card-title mb-0">Users Data Table</h4>
+            <div class="d-flex gap-2">
+              <button class="btn btn-primary btn-sm" (click)="refresh()" [disabled]="loading">
+                <i class="mdi mdi-refresh" [class.mdi-spin]="loading"></i>
+                {{ loading ? 'Loading...' : 'Refresh' }}
+              </button>
+              <button class="btn btn-success btn-sm" (click)="openAddModal()">
+                <i class="mdi mdi-plus me-1"></i>Add User
+              </button>
+            </div>
+          </div>
+
+          <!-- Success Message Toast (Top Right) -->
+          <div *ngIf="showSuccessMessage"
+            class="alert alert-success alert-dismissible fade show position-fixed success-toast" role="alert">
+            <div class="d-flex align-items-center">
+              <i class="mdi mdi-check-circle me-2 h5 mb-0 text-success"></i>
+              <div class="flex-grow-1">
+                <strong>Success!</strong> {{ successMessage }}
+              </div>
+              <button type="button" class="btn-close" (click)="hideSuccessMessage()" aria-label="Close"></button>
+            </div>
+          </div>
+
+          <!-- Error Alert -->
+          <div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+              <i class="mdi mdi-alert-circle-outline me-2"></i>
+              {{ error }}
+              <button type="button" class="btn-close ms-auto" (click)="error = ''" aria-label="Close"></button>
+            </div>
+          </div>
+
+          <div class="row mb-md-2">
+            <!-- Page size -->
+            <div class="col-sm-12 col-md-6">
+              <label class="d-inline-flex align-items-center">Show
+                <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="form-control form-control-sm mx-2">
+                  <option [ngValue]="10">10</option>
+                  <option [ngValue]="25">25</option>
+                  <option [ngValue]="50">50</option>
+                </select> entries
+              </label>
+            </div>
+
+            <!-- Search -->
+            <div class="col-sm-12 col-md-6 text-md-end">
+              <label class="d-inline-flex align-items-center">Search:
+                <input type="text" [(ngModel)]="searchTerm" (input)="applyFilter()"
+                  class="form-control form-control-sm ms-2" placeholder="Search users..." />
+              </label>
+            </div>
+          </div>
+
+    
+
+          <!-- Loading State -->
+          <div *ngIf="loading" class="text-center p-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 mb-0">Loading users...</p>
+          </div>
+
+          <!-- Table -->
+          <div *ngIf="!loading" class="table-responsive">
+            <table class="table table-bordered dt-responsive nowrap datatables no-footer dtr-inline">
+              <thead class="table-light">
+                <tr>
+                  <th>User ID</th>
+                  <th>Full Name</th>
+                  <th>Company</th>
+                  <th>Email</th>
+                  <th>Mobile</th>
+                  <th>User Type</th>
+                  <th>Status</th>
+                  <th>Created On</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let user of paginatedUsers; trackBy: trackByUserId">
+                  <td>
+                    <!-- FIXED: Handle null userId -->
+                    <span class="badge bg-info">{{ getDisplayUserId(user) }}</span>
+                  </td>
+                  <td>
+                    <strong>{{ user.fullName }}</strong>
+                  </td>
+                  <td>
+                    <span class="text-muted">{{ getTenantName(user.tenantId) }}</span>
+                    <small class="d-block text-muted">{{ user.tenantId }}</small>
+                  </td>
+                  <td>
+                    <a [href]="'mailto:' + user.emailId" class="text-primary">
+                      {{ user.emailId }}
+                    </a>
+                  </td>
+                  <td>
+                    <a [href]="'tel:' + user.mobile" class="text-primary">
+                      {{ user.mobile }}
+                    </a>
+                  </td>
+                  <td>
+                    <!-- FIXED: Handle different user types with proper badge classes -->
+                    <span class="badge" [ngClass]="getUserTypeBadgeClass(user.userType)">
+                      {{ formatUserType(user.userType) }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge bg-success" *ngIf="user.active">
+                      <i class="mdi mdi-check-circle me-1"></i>Active
+                    </span>
+                    <span class="badge bg-danger" *ngIf="!user.active">
+                      <i class="mdi mdi-close-circle me-1"></i>Inactive
+                    </span>
+                  </td>
+                  <td>
+                    <small>{{ formatDate(user.createdOn) }}</small>
+                    <div class="text-muted" style="font-size: 0.75rem;">
+                      by {{ user.createdBy }}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="dropdown">
+                      <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="mdi mdi-dots-vertical"></i>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-end">
+                        <a class="dropdown-item" href="javascript:void(0);" (click)="openEditModal(user)">
+                          <i class="mdi mdi-pencil me-2"></i>Edit
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-danger" href="javascript:void(0);" (click)="openDeleteModal(user)">
+                          <i class="mdi mdi-delete me-2"></i>Delete
+                        </a>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Empty State -->
+                <tr *ngIf="paginatedUsers.length === 0">
+                  <td colspan="9" class="text-center py-4">
+                    <div class="text-muted">
+                      <i class="mdi mdi-account-search h1 d-block mb-2"></i>
+                      <p class="mb-0">{{ searchTerm ? 'No users found matching your search.' : 'No users available.' }}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div *ngIf="!loading && totalRecords > 0" class="row justify-content-between align-items-center mt-3">
+            <div class="col-sm-12 col-md-5">
+              <div class="dataTables_info">
+                <!-- Showing <strong>{{ (page - 1) * pageSize + 1 }}</strong> to
+                <strong>{{ Math.min(page * pageSize, totalRecords) }}</strong> of
+                <strong>{{ totalRecords }}</strong> entries -->
+                <span *ngIf="searchTerm" class="text-muted"> (filtered from {{ users.length }} total)</span>
+              </div>
+            </div>
+            <div class="col-sm-12 col-md-7">
+              <div class="dataTables_paginate paging_simple_numbers">
+                <nav aria-label="Table pagination">
+                  <ul class="pagination pagination-rounded justify-content-end mb-0">
+                    <!-- First Page -->
+                    <li class="page-item" [class.disabled]="page === 1">
+                      <a class="page-link" href="javascript:void(0);" (click)="page = 1"
+                        [attr.aria-disabled]="page === 1">
+                        <i class="mdi mdi-chevron-double-left"></i>
+                      </a>
+                    </li>
+
+                    <!-- Previous Page -->
+                    <li class="page-item" [class.disabled]="page === 1">
+                      <a class="page-link" href="javascript:void(0);" (click)="previousPage()"
+                        [attr.aria-disabled]="page === 1">
+                        <i class="mdi mdi-chevron-left"></i>
+                      </a>
+                    </li>
+
+                    <!-- Page Numbers -->
+                    <ng-container *ngIf="totalPages <= 7">
+                      <li *ngFor="let pageNum of getPageNumbers()" class="page-item" [class.active]="pageNum === page">
+                        <a class="page-link" href="javascript:void(0);" (click)="goToPage(pageNum)">{{ pageNum }}</a>
+                      </li>
+                    </ng-container>
+
+                    <ng-container *ngIf="totalPages > 7">
+                      <!-- First page -->
+                      <li class="page-item" [class.active]="page === 1">
+                        <a class="page-link" href="javascript:void(0);" (click)="goToPage(1)">1</a>
+                      </li>
+
+                      <!-- Ellipsis after first page if needed -->
+                      <li *ngIf="page > 4" class="page-item disabled">
+                        <span class="page-link">...</span>
+                      </li>
+
+                      <!-- Pages around current page -->
+                      <ng-container *ngFor="let pageNum of getVisiblePages()">
+                        <li *ngIf="pageNum > 1 && pageNum < totalPages" class="page-item"
+                          [class.active]="pageNum === page">
+                          <a class="page-link" href="javascript:void(0);" (click)="goToPage(pageNum)">{{ pageNum }}</a>
+                        </li>
+                      </ng-container>
+
+                      <!-- Ellipsis before last page if needed -->
+                      <li *ngIf="page < totalPages - 3" class="page-item disabled">
+                        <span class="page-link">...</span>
+                      </li>
+
+                      <!-- Last page -->
+                      <li *ngIf="totalPages > 1" class="page-item" [class.active]="page === totalPages">
+                        <a class="page-link" href="javascript:void(0);" (click)="goToPage(totalPages)">{{ totalPages
+                          }}</a>
+                      </li>
+                    </ng-container>
+
+                    <!-- Next Page -->
+                    <li class="page-item" [class.disabled]="page >= totalPages">
+                      <a class="page-link" href="javascript:void(0);" (click)="nextPage()"
+                        [attr.aria-disabled]="page >= totalPages">
+                        <i class="mdi mdi-chevron-right"></i>
+                      </a>
+                    </li>
+
+                    <!-- Last Page -->
+                    <li class="page-item" [class.disabled]="page >= totalPages">
+                      <a class="page-link" href="javascript:void(0);" (click)="page = totalPages"
+                        [attr.aria-disabled]="page >= totalPages">
+                        <i class="mdi mdi-chevron-double-right"></i>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Modal -->
+  <div class="modal fade" [class.show]="showUserModal" [style.display]="showUserModal ? 'block' : 'none'" tabindex="-1"
+    role="dialog" aria-labelledby="userModalLabel" [attr.aria-hidden]="!showUserModal">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="userModalLabel">
+            <i class="mdi mdi-account me-2"></i>{{ isEditMode ? 'Edit User' : 'Add New User' }}
+          </h4>
+          <button type="button" class="btn-close" (click)="closeUserModal()" aria-label="Close"></button>
+        </div>
+
+        <form [formGroup]="userForm" (ngSubmit)="onSubmit()" novalidate>
+          <div class="modal-body">
+
+
+
+            <!-- Error Alert -->
+            <div *ngIf="userError" class="alert alert-danger alert-dismissible fade show" role="alert">
+              <i class="mdi mdi-alert me-2"></i>{{ userError }}
+              <button type="button" class="btn-close" (click)="userError = ''" aria-label="Close"></button>
+            </div>
+
+            <div class="row">
+              <!-- User ID (readonly in edit mode) -->
+              <div class="col-md-6 mb-3" *ngIf="isEditMode">
+                <label for="userId" class="form-label">User ID</label>
+                <input type="text" formControlName="userId" class="form-control bg-light" id="userId"
+                  [value]="userForm.get('userId')?.value">
+                <small class="text-muted">This field is read-only</small>
+              </div>
+
+              <!-- Full Name -->
+              <div class="col-md-6 mb-3" [class.col-md-12]="!isEditMode">
+                <label for="fullName" class="form-label">Full Name <span class="text-danger">*</span></label>
+                <input type="text" formControlName="fullName" class="form-control"
+                  [class.is-invalid]="hasFieldError('fullName')" id="fullName" placeholder="Enter full name">
+                <div *ngIf="hasFieldError('fullName')" class="invalid-feedback">
+                  {{ getFieldError('fullName') }}
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Tenant Dropdown -->
+              <div class="col-md-6 mb-3">
+                <label for="tenantId" class="form-label">Company <span class="text-danger">*</span></label>
+                <select formControlName="tenantId" class="form-control" id="tenantId">
+                  <option value="">Select Company</option>
+                  {{tenants|json}}
+                  <option *ngFor="let tenant of tenants" [value]="tenant.tenantId"
+                    [selected]="tenant.tenantId === userForm.get('tenantId')?.value">
+                    {{ tenant.companyName }}
+                  </option>
+                </select>
+                <div *ngIf="hasFieldError('tenantId')" class="invalid-feedback">
+                  {{ getFieldError('tenantId') }}
+                </div>
+                <!-- Debug info for tenantId -->
+                <small class="text-muted" *ngIf="isEditMode">
+                  Selected: {{ userForm.get('tenantId')?.value || 'None' }}
+                </small>
+              </div>
+
+              <!-- Email -->
+              <div class="col-md-6 mb-3">
+                <label for="emailId" class="form-label">Email <span class="text-danger">*</span></label>
+                <input type="email" formControlName="emailId" class="form-control"
+                  [class.is-invalid]="hasFieldError('emailId')" id="emailId" placeholder="Enter email">
+                <div *ngIf="hasFieldError('emailId')" class="invalid-feedback">
+                  {{ getFieldError('emailId') }}
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Mobile -->
+              <div class="col-md-6 mb-3">
+                <label for="mobile" class="form-label">Mobile <span class="text-danger">*</span></label>
+                <input type="text" formControlName="mobile" class="form-control"
+                  [class.is-invalid]="hasFieldError('mobile')" id="mobile" placeholder="Enter mobile number">
+                <div *ngIf="hasFieldError('mobile')" class="invalid-feedback">
+                  {{ getFieldError('mobile') }}
+                </div>
+              </div>
+
+              <!-- User Type - UPDATED: Added TenantUser option -->
+              <div class="col-md-6 mb-3">
+                <label for="userType" class="form-label">User Type <span class="text-danger">*</span></label>
+                <select formControlName="userType" class="form-control" [class.is-invalid]="hasFieldError('userType')"
+                  id="userType">
+                  <option value="">Select User Type</option>
+                  <option value="ADMIN">Admin</option>
+                  <option value="MANAGER">Manager</option>
+                  <option value="EMPLOYEE">Employee</option>
+                  <option value="TenantUser">Tenant User</option>
+                  <option value="GUEST">Guest</option>
+                </select>
+                <div *ngIf="hasFieldError('userType')" class="invalid-feedback">
+                  {{ getFieldError('userType') }}
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Active Status -->
+              <div class="col-md-6 mb-3">
+                <div class="form-check mt-2">
+                  <input type="checkbox" class="form-check-input" formControlName="active" id="active">
+                  <label class="form-check-label" for="active">
+                    <strong>Active Status</strong>
+                  </label>
+                </div>
+                <small class="text-muted">Check to make this user active</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light waves-effect" (click)="closeUserModal()">
+              <i class="mdi mdi-close me-1"></i>Cancel
+            </button>
+            <button type="submit" class="btn btn-primary waves-effect waves-light" [disabled]="userLoading">
+              <span *ngIf="userLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+              <i *ngIf="!userLoading" class="mdi mdi-content-save me-1"></i>
+              {{ userLoading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update User' : 'Create
+              User') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal fade" [class.show]="showDeleteModal" [style.display]="showDeleteModal ? 'block' : 'none'"
+    tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" [attr.aria-hidden]="!showDeleteModal">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteModalLabel">
+            <i class="mdi mdi-delete-alert me-2 text-danger"></i>Confirm Delete
+          </h5>
+          <button type="button" class="btn-close" (click)="closeDeleteModal()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-center">
+            <i class="mdi mdi-alert-circle text-warning" style="font-size: 3rem;"></i>
+            <h5 class="mt-3">Are you sure?</h5>
+            <p class="text-muted">
+              This will permanently delete the user. This action cannot be undone.
+            </p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light waves-effect" (click)="closeDeleteModal()">
+            <i class="mdi mdi-close me-1"></i>Cancel
+          </button>
+          <button type="button" class="btn btn-danger waves-effect waves-light" (click)="confirmDelete()">
+            <i class="mdi mdi-delete me-1"></i>Delete User
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Backdrop -->
+  <div *ngIf="showUserModal || showDeleteModal" class="modal-backdrop fade show"></div>
+</div>

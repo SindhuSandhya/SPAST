@@ -1,0 +1,741 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="card-title mb-0">Candidates Data Table</h4>
+            <div class="d-flex gap-2">
+              <button class="btn btn-primary btn-sm" (click)="refresh()" [disabled]="loading">
+                <i class="mdi mdi-refresh" [class.mdi-spin]="loading"></i>
+                {{ loading ? 'Loading...' : 'Refresh' }}
+              </button>
+              <button class="btn btn-success btn-sm" (click)="openAddModal()">
+                <i class="mdi mdi-plus me-1"></i>Add Candidate
+              </button>
+            </div>
+          </div>
+
+          <!-- Success Message Toast (Top Right) -->
+          <div *ngIf="showSuccessMessage" 
+               class="alert alert-success alert-dismissible fade show position-fixed success-toast" 
+               role="alert">
+            <div class="d-flex align-items-center">
+              <i class="mdi mdi-check-circle me-2 h5 mb-0 text-success"></i>
+              <div class="flex-grow-1">
+                <strong>Success!</strong> {{ successMessage }}
+              </div>
+              <button type="button" class="btn-close" (click)="hideSuccessMessage()" aria-label="Close"></button>
+            </div>
+          </div>
+
+          <!-- Error Alert -->
+          <div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+              <i class="mdi mdi-alert-circle-outline me-2"></i>
+              {{ error }}
+              <button type="button" class="btn-close ms-auto" (click)="error = ''" aria-label="Close"></button>
+            </div>
+          </div>
+
+          <div class="row mb-md-2">
+            <!-- Page size -->
+            <div class="col-sm-12 col-md-6">
+              <label class="d-inline-flex align-items-center">Show
+                <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="form-control form-control-sm mx-2">
+                  <option [ngValue]="10">10</option>
+                  <option [ngValue]="25">25</option>
+                  <option [ngValue]="50">50</option>
+                </select> entries
+              </label>
+            </div>
+
+            <!-- Search -->
+            <div class="col-sm-12 col-md-6 text-md-end">
+              <label class="d-inline-flex align-items-center">Search:
+                <input type="text" [(ngModel)]="searchTerm" (input)="applyFilter()"
+                  class="form-control form-control-sm ms-2" 
+                  placeholder="Search candidates..." />
+              </label>
+            </div>
+          </div>
+
+          <!-- Debug Info (Remove in production) -->
+          <div class="alert alert-info mb-3" *ngIf="!loading">
+            <small>
+              <strong>Debug Info:</strong> 
+              Total Candidates: {{ candidates.length }}, 
+              Filtered: {{ filteredCandidates.length }}, 
+              Current Page: {{ page }}/{{ totalPages }}
+            </small>
+          </div>
+
+          <!-- Loading State -->
+          <div *ngIf="loading" class="text-center p-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 mb-0">Loading candidates...</p>
+          </div>
+
+          <!-- Table -->
+          <div *ngIf="!loading" class="table-responsive">
+            <table class="table table-bordered dt-responsive nowrap datatables no-footer dtr-inline">
+              <thead class="table-light">
+                <tr>
+                  <th>Candidate ID</th>
+                  <th>Full Name</th>
+                  <th>Email</th>
+                  <th>Mobile</th>
+                  <th>Gender</th>
+                  <th>Location</th>
+                  <th>Employment Type</th>
+                  <th>Case Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let candidate of paginatedCandidates; trackBy: trackByCandidateId">
+                  <td>
+                    <span class="badge bg-info">{{ getDisplayCandidateId(candidate) }}</span>
+                  </td>
+                  <td>
+                    <strong>{{ getFullName(candidate) }}</strong>
+                    <div class="text-muted small">{{ candidate.fatherName }}</div>
+                  </td>
+                  <td>
+                    <a [href]="'mailto:' + candidate.emailId" class="text-primary">
+                      {{ candidate.emailId }}
+                    </a>
+                  </td>
+                  <td>
+                    <a [href]="'tel:+91' + candidate.mobile" class="text-primary">
+                      +91 {{ candidate.mobile }}
+                    </a>
+                  </td>
+                  <td>
+                    <span class="badge" [ngClass]="getGenderBadgeClass(candidate.gender)">
+                      {{ formatGender(candidate.gender) }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="text-muted">{{ getLocationName(candidate.location) }}</span>
+                    <small class="d-block text-muted">{{ candidate.location }}</small>
+                  </td>
+                  <td>
+                    <span class="badge" [ngClass]="getEmploymentTypeBadgeClass(candidate.employmentType)">
+                      {{ formatEmploymentType(candidate.employmentType) }}
+                    </span>
+                  </td>
+                  <td>
+                    <small>{{ formatDate(candidate.caseReceiveDate) }}</small>
+                    <div class="text-muted" style="font-size: 0.75rem;">
+                      DOB: {{ formatDate(candidate.dateOfBirth) }}
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge bg-success" *ngIf="candidate.active">
+                      <i class="mdi mdi-check-circle me-1"></i>Active
+                    </span>
+                    <span class="badge bg-danger" *ngIf="!candidate.active">
+                      <i class="mdi mdi-close-circle me-1"></i>Inactive
+                    </span>
+                  </td>
+                  <td>
+                    <div class="dropdown">
+                      <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                        type="button" 
+                        data-bs-toggle="dropdown" 
+                        aria-expanded="false">
+                        <i class="mdi mdi-dots-vertical"></i>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-end">
+                        <a class="dropdown-item" href="javascript:void(0);" (click)="openEditModalWithLocations(candidate)">
+                          <i class="mdi mdi-pencil me-2"></i>Edit
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-danger" href="javascript:void(0);" (click)="openDeleteModal(candidate)">
+                          <i class="mdi mdi-delete me-2"></i>Delete
+                        </a>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                
+                <!-- Empty State -->
+                <tr *ngIf="paginatedCandidates.length === 0">
+                  <td colspan="10" class="text-center py-4">
+                    <div class="text-muted">
+                      <i class="mdi mdi-account-search h1 d-block mb-2"></i>
+                      <p class="mb-0">{{ searchTerm ? 'No candidates found matching your search.' : 'No candidates available.' }}</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div *ngIf="!loading && totalRecords > 0" class="row justify-content-between align-items-center mt-3">
+            <div class="col-sm-12 col-md-5">
+              <div class="dataTables_info">
+                Showing <strong>{{ (page - 1) * pageSize + 1 }}</strong> to 
+                <strong>{{ Math.min(page * pageSize, totalRecords) }}</strong> of 
+                <strong>{{ totalRecords }}</strong> entries
+                <span *ngIf="searchTerm" class="text-muted"> (filtered from {{ candidates.length }} total)</span>
+              </div>
+            </div>
+            <div class="col-sm-12 col-md-7">
+              <div class="dataTables_paginate paging_simple_numbers">
+                <nav aria-label="Table pagination">
+                  <ul class="pagination pagination-rounded justify-content-end mb-0">
+                    <!-- First Page -->
+                    <li class="page-item" [class.disabled]="page === 1">
+                      <a class="page-link" href="javascript:void(0);" (click)="page = 1" 
+                         [attr.aria-disabled]="page === 1">
+                        <i class="mdi mdi-chevron-double-left"></i>
+                      </a>
+                    </li>
+                    
+                    <!-- Previous Page -->
+                    <li class="page-item" [class.disabled]="page === 1">
+                      <a class="page-link" href="javascript:void(0);" (click)="previousPage()" 
+                         [attr.aria-disabled]="page === 1">
+                        <i class="mdi mdi-chevron-left"></i>
+                      </a>
+                    </li>
+                    
+                    <!-- Page Numbers -->
+                    <ng-container *ngIf="totalPages <= 7">
+                      <li *ngFor="let pageNum of getPageNumbers()" 
+                          class="page-item" [class.active]="pageNum === page">
+                        <a class="page-link" href="javascript:void(0);" 
+                           (click)="goToPage(pageNum)">{{ pageNum }}</a>
+                      </li>
+                    </ng-container>
+                    
+                    <ng-container *ngIf="totalPages > 7">
+                      <!-- First page -->
+                      <li class="page-item" [class.active]="page === 1">
+                        <a class="page-link" href="javascript:void(0);" (click)="goToPage(1)">1</a>
+                      </li>
+                      
+                      <!-- Ellipsis after first page if needed -->
+                      <li *ngIf="page > 4" class="page-item disabled">
+                        <span class="page-link">...</span>
+                      </li>
+                      
+                      <!-- Pages around current page -->
+                      <ng-container *ngFor="let pageNum of getVisiblePages()">
+                        <li *ngIf="pageNum > 1 && pageNum < totalPages" 
+                            class="page-item" [class.active]="pageNum === page">
+                          <a class="page-link" href="javascript:void(0);" 
+                             (click)="goToPage(pageNum)">{{ pageNum }}</a>
+                        </li>
+                      </ng-container>
+                      
+                      <!-- Ellipsis before last page if needed -->
+                      <li *ngIf="page < totalPages - 3" class="page-item disabled">
+                        <span class="page-link">...</span>
+                      </li>
+                      
+                      <!-- Last page -->
+                      <li *ngIf="totalPages > 1" class="page-item" [class.active]="page === totalPages">
+                        <a class="page-link" href="javascript:void(0);" 
+                           (click)="goToPage(totalPages)">{{ totalPages }}</a>
+                      </li>
+                    </ng-container>
+                    
+                    <!-- Next Page -->
+                    <li class="page-item" [class.disabled]="page >= totalPages">
+                      <a class="page-link" href="javascript:void(0);" (click)="nextPage()" 
+                         [attr.aria-disabled]="page >= totalPages">
+                        <i class="mdi mdi-chevron-right"></i>
+                      </a>
+                    </li>
+                    
+                    <!-- Last Page -->
+                    <li class="page-item" [class.disabled]="page >= totalPages">
+                      <a class="page-link" href="javascript:void(0);" (click)="page = totalPages" 
+                         [attr.aria-disabled]="page >= totalPages">
+                        <i class="mdi mdi-chevron-double-right"></i>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Candidate Modal -->
+  <div class="modal fade" [class.show]="showCandidateModal" [style.display]="showCandidateModal ? 'block' : 'none'" 
+       tabindex="-1" role="dialog" aria-labelledby="candidateModalLabel" [attr.aria-hidden]="!showCandidateModal">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="candidateModalLabel">
+            <i class="mdi mdi-account me-2"></i>{{ isEditMode ? 'Edit Candidate' : 'Add New Candidate' }}
+          </h4>
+          <button type="button" class="btn-close" (click)="closeCandidateModal()" aria-label="Close"></button>
+        </div>
+        
+        <form [formGroup]="candidateForm" (ngSubmit)="onSubmit()" novalidate>
+          <div class="modal-body">
+            
+            <!-- Debug Info (Remove in production) -->
+            <div class="alert alert-info mb-3" *ngIf="isEditMode">
+              <small>
+                <strong>Debug - Current Candidate Data:</strong><br>
+                Candidate ID: {{ currentCandidate?.candidateId || currentCandidate?.id || 'N/A' }}<br>
+                Location ID: {{ currentCandidate?.location || 'N/A' }}<br>
+                Form candidateId: {{ candidateForm.get('candidateId')?.value || 'Empty' }}<br>
+                Form location: {{ candidateForm.get('location')?.value || 'Empty' }}<br>
+                Available Locations: {{ locations.length }}
+              </small>
+            </div>
+            
+            <!-- Error Alert -->
+            <div *ngIf="candidateError" class="alert alert-danger alert-dismissible fade show" role="alert">
+              <i class="mdi mdi-alert me-2"></i>{{ candidateError }}
+              <button type="button" class="btn-close" (click)="candidateError = ''" aria-label="Close"></button>
+            </div>
+
+            <!-- Personal Information Section -->
+            <div class="row mb-3">
+              <div class="col-12">
+                <h5 class="text-primary border-bottom pb-2">
+                  <i class="mdi mdi-account-circle me-2"></i>Personal Information
+                </h5>
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Candidate ID (readonly in edit mode) -->
+              <div class="col-md-4 mb-3" *ngIf="isEditMode">
+                <label for="candidateId" class="form-label">Candidate ID</label>
+                <input type="text" 
+                       class="form-control bg-light" 
+                       id="candidateId" 
+                       readonly
+                       [value]="getDisplayCandidateId(currentCandidate!)">
+                <input type="hidden" formControlName="candidateId">
+                <small class="text-muted">ID: {{ getDisplayCandidateId(currentCandidate!) }}</small>
+              </div>
+              
+              <!-- First Name -->
+              <div class="col-md-4 mb-3" [class.col-md-4]="isEditMode" [class.col-md-6]="!isEditMode">
+                <label for="firstName" class="form-label">
+                  <span class="text-danger">*</span> First Name
+                  <i class="mdi mdi-information-outline text-info ms-1" title="Enter First Name"></i>
+                </label>
+                <input type="text" formControlName="firstName" class="form-control" 
+                       [class.is-invalid]="hasFieldError('firstName')"
+                       id="firstName" placeholder="Enter First Name">
+                <div *ngIf="hasFieldError('firstName')" class="invalid-feedback">
+                  {{ getFieldError('firstName') }}
+                </div>
+              </div>
+              
+              <!-- Middle Name -->
+              <div class="col-md-4 mb-3" [class.col-md-4]="isEditMode" [class.col-md-6]="!isEditMode">
+                <label for="middleName" class="form-label">
+                  Middle Name
+                  <i class="mdi mdi-information-outline text-info ms-1" title="Enter Middle Name"></i>
+                </label>
+                <input type="text" formControlName="middleName" class="form-control" 
+                       id="middleName" placeholder="Enter Middle Name">
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Last Name -->
+              <div class="col-md-4 mb-3">
+                <label for="lastName" class="form-label">
+                  <span class="text-danger">*</span> Last Name
+                  <i class="mdi mdi-information-outline text-info ms-1" title="Enter Last Name"></i>
+                </label>
+                <input type="text" formControlName="lastName" class="form-control" 
+                       [class.is-invalid]="hasFieldError('lastName')"
+                       id="lastName" placeholder="Enter Last Name">
+                <div *ngIf="hasFieldError('lastName')" class="invalid-feedback">
+                  {{ getFieldError('lastName') }}
+                </div>
+              </div>
+              
+              <!-- Father's Name -->
+              <div class="col-md-4 mb-3">
+                <label for="fatherName" class="form-label">
+                  <span class="text-danger">*</span> Father's Name
+                  <i class="mdi mdi-information-outline text-info ms-1" title="Enter Father's Name"></i>
+                </label>
+                <input type="text" formControlName="fatherName" class="form-control" 
+                       [class.is-invalid]="hasFieldError('fatherName')"
+                       id="fatherName" placeholder="Enter Father's Name">
+                <div *ngIf="hasFieldError('fatherName')" class="invalid-feedback">
+                  {{ getFieldError('fatherName') }}
+                </div>
+              </div>
+              
+              <!-- Date of Birth -->
+              <div class="col-md-4 mb-3">
+                <label for="dateOfBirth" class="form-label">
+                  <span class="text-danger">*</span> Date of Birth
+                  <i class="mdi mdi-information-outline text-info ms-1" title="dd-mm-yyyy"></i>
+                </label>
+                <input type="date" formControlName="dateOfBirth" class="form-control" 
+                       [class.is-invalid]="hasFieldError('dateOfBirth')"
+                       id="dateOfBirth">
+                <div *ngIf="hasFieldError('dateOfBirth')" class="invalid-feedback">
+                  {{ getFieldError('dateOfBirth') }}
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Gender -->
+              <div class="col-md-4 mb-3">
+                <label for="gender" class="form-label">
+                  <span class="text-danger">*</span> Gender
+                  <i class="mdi mdi-information-outline text-info ms-1" title="Select Gender"></i>
+                </label>
+                <select formControlName="gender" class="form-control"
+                        [class.is-invalid]="hasFieldError('gender')"
+                        id="gender">
+                  <option value="">Select Gender</option>
+                  <option *ngFor="let option of genderOptions" [value]="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+                <div *ngIf="hasFieldError('gender')" class="invalid-feedback">
+                  {{ getFieldError('gender') }}
+                </div>
+              </div>
+              
+              <!-- Mobile Number -->
+              <div class="col-md-4 mb-3">
+                <label for="mobile" class="form-label">
+                  <span class="text-danger">*</span> Mobile Number
+                  <i class="mdi mdi-information-outline text-info ms-1" title="+91 Enter Mobile Number"></i>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">+91</span>
+                  <input type="text" formControlName="mobile" class="form-control" 
+                         [class.is-invalid]="hasFieldError('mobile')"
+                         id="mobile" placeholder="Enter Mobile Number">
+                </div>
+                <div *ngIf="hasFieldError('mobile')" class="invalid-feedback">
+                  {{ getFieldError('mobile') }}
+                </div>
+              </div>
+              
+              <!-- Email ID -->
+              <div class="col-md-4 mb-3">
+                <label for="emailId" class="form-label">
+                  <span class="text-danger">*</span> Email ID
+                  <i class="mdi mdi-information-outline text-info ms-1" title="Enter Email ID"></i>
+                </label>
+                <input type="email" formControlName="emailId" class="form-control" 
+                       [class.is-invalid]="hasFieldError('emailId')"
+                       id="emailId" placeholder="Enter Email ID">
+                <div *ngIf="hasFieldError('emailId')" class="invalid-feedback">
+                  {{ getFieldError('emailId') }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Employment Information Section -->
+            <div class="row mb-3 mt-4">
+              <div class="col-12">
+                <h5 class="text-primary border-bottom pb-2">
+                  <i class="mdi mdi-briefcase me-2"></i>Employment Information
+                </h5>
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Date of Joining -->
+              <div class="col-md-4 mb-3">
+                <label for="dateOfJoining" class="form-label">
+                  Date of Joining
+                  <i class="mdi mdi-information-outline text-info ms-1" title="dd-mm-yyyy"></i>
+                </label>
+                <input type="date" formControlName="dateOfJoining" class="form-control" 
+                       id="dateOfJoining">
+              </div>
+              
+              <!-- Case Receive Date -->
+              <div class="col-md-4 mb-3">
+                <label for="caseReceiveDate" class="form-label">
+                  <span class="text-danger">*</span> Case Receive Date
+                  <i class="mdi mdi-information-outline text-info ms-1" title="27-09-2025"></i>
+                </label>
+                <input type="date" formControlName="caseReceiveDate" class="form-control" 
+                       [class.is-invalid]="hasFieldError('caseReceiveDate')"
+                       id="caseReceiveDate">
+                <div *ngIf="hasFieldError('caseReceiveDate')" class="invalid-feedback">
+                  {{ getFieldError('caseReceiveDate') }}
+                </div>
+              </div>
+              
+              <!-- Employee ID -->
+              <div class="col-md-4 mb-3">
+                <label for="employeeId" class="form-label">
+                  Employee ID
+                  <i class="mdi mdi-information-outline text-info ms-1" title="Enter Employee ID"></i>
+                </label>
+                <input type="text" formControlName="employeeId" class="form-control" 
+                       id="employeeId" placeholder="Enter Employee ID">
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Location -->
+              <div class="col-md-4 mb-3">
+                <label for="location" class="form-label">
+                  <span class="text-danger">*</span> Location
+                  <i class="mdi mdi-information-outline text-info ms-1" title="Select Location"></i>
+                </label>
+                <select formControlName="location" class="form-control"
+                        [class.is-invalid]="hasFieldError('location')"
+                        id="location">
+                  <option value="">Select Location</option>
+                  <option *ngFor="let location of locations" [value]="location.locationId">
+                    {{ location.locationName }}, {{ location.city }}, {{ location.state }}
+                  </option>
+                </select>
+                <div *ngIf="hasFieldError('location')" class="invalid-feedback">
+                  {{ getFieldError('location') }}
+                </div>
+                <small class="text-muted" *ngIf="isEditMode">
+                  Current: {{ currentCandidate?.location || 'None' }} | 
+                  Form: {{ candidateForm.get('location')?.value || 'Empty' }} |
+                  Locations loaded: {{ locations.length }}
+                </small>
+              </div>
+              
+              <!-- UAN -->
+              <div class="col-md-4 mb-3">
+                <label for="uan" class="form-label">
+                  UAN
+                  <i class="mdi mdi-information-outline text-info ms-1" title="Enter UAN"></i>
+                </label>
+                <input type="text" formControlName="uan" class="form-control" 
+                       id="uan" placeholder="Enter UAN">
+              </div>
+              
+              <!-- Employment Type -->
+              <div class="col-md-4 mb-3">
+                <label for="employmentType" class="form-label">
+                  <span class="text-danger">*</span> Employment Type
+                  <i class="mdi mdi-information-outline text-info ms-1" title="Pre Employment | Post Employment"></i>
+                </label>
+                <select formControlName="employmentType" class="form-control"
+                        [class.is-invalid]="hasFieldError('employmentType')"
+                        id="employmentType">
+                  <option value="">Select Employment Type</option>
+                  <option *ngFor="let option of employmentTypeOptions" [value]="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+                <div *ngIf="hasFieldError('employmentType')" class="invalid-feedback">
+                  {{ getFieldError('employmentType') }}
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Active Status -->
+              <div class="col-md-6 mb-3">
+                <div class="form-check mt-2">
+                  <input type="checkbox" class="form-check-input" formControlName="active" id="active">
+                  <label class="form-check-label" for="active">
+                    <strong>Active Status</strong>
+                  </label>
+                </div>
+                <small class="text-muted">Check to make this candidate active</small>
+              </div>
+            </div>
+
+            <!-- Documents Section -->
+            <div class="row mb-3 mt-4">
+              <div class="col-12">
+                <h5 class="text-primary border-bottom pb-2">
+                  <i class="mdi mdi-file-multiple me-2"></i>Documents
+                </h5>
+              </div>
+            </div>
+
+            <!-- Document Upload Controls -->
+            <div class="row mb-3">
+              <!-- Document Type Dropdown -->
+              <div class="col-md-6 mb-3">
+                <label for="documentType" class="form-label">
+                  Document Type
+                  <i class="mdi mdi-information-outline text-info ms-1" title="Select document type before uploading"></i>
+                </label>
+                <select [(ngModel)]="selectedDocumentType" class="form-control" id="documentType" [ngModelOptions]="{standalone: true}">
+                  <option value="">Select Document Type</option>
+                  <option *ngFor="let docType of documentTypes" [value]="docType.id">
+                    {{ docType.typeName }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Upload Area -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">
+                  Documents
+                  <i class="mdi mdi-information-outline text-info ms-1" title="Upload files - Max 10 files, 2MB each"></i>
+                </label>
+                <div class="upload-area" 
+                     [class.drag-over]="dragOver"
+                     (dragover)="onDragOver($event)"
+                     (dragleave)="onDragLeave($event)"
+                     (drop)="onDrop($event)"
+                     (click)="addDocument()">
+                  <div class="upload-content">
+                    <i class="mdi mdi-cloud-upload text-muted" style="font-size: 2rem;"></i>
+                    <p class="mb-1">
+                      <i class="mdi mdi-folder text-warning me-1"></i>Upload file
+                    </p>
+                    <small class="text-muted">Click to browse or drag and drop</small>
+                  </div>
+                </div>
+                <input type="file" id="fileInput" (change)="onFileSelect($event)" 
+                       [accept]="allowedFileTypes.join(',')" 
+                       multiple style="display: none;">
+                <div class="d-flex justify-content-end mt-2">
+                  <button type="button" class="btn btn-primary btn-sm" 
+                          (click)="addDocument()" 
+                          [disabled]="!selectedDocumentType">
+                    <i class="mdi mdi-plus me-1"></i>Add
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- File Type Support Info -->
+            <div class="row mb-3">
+              <div class="col-12">
+                <small class="text-muted">
+                  <strong>Supporting files</strong> - JPG, JPEG, PNG, PDF, DOC, DOCX, ZIP.<br>
+                  <strong>Maximum 10 files up to 2MB.</strong>
+                </small>
+              </div>
+            </div>
+
+            <!-- Upload Error -->
+            <div *ngIf="uploadError" class="alert alert-warning alert-dismissible fade show" role="alert">
+              <i class="mdi mdi-alert me-2"></i>{{ uploadError }}
+              <button type="button" class="btn-close" (click)="uploadError = ''" aria-label="Close"></button>
+            </div>
+
+            <!-- Documents Table -->
+            <div class="row" *ngIf="candidateDocuments.length > 0">
+              <div class="col-12">
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Document</th>
+                        <th>Document Type</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let doc of candidateDocuments; trackBy: trackByDocumentId">
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <i [class]="getFileIcon(doc.fileType)" class="me-2 text-primary"></i>
+                            <div>
+                              <div class="fw-bold">{{ doc.fileName }}</div>
+                              <small class="text-muted">{{ formatFileSize(doc.fileSize) }}</small>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="badge bg-info">{{ getDocumentTypeName(doc.documentType) }}</span>
+                        </td>
+                        <td>
+                          <button type="button" class="btn btn-sm btn-outline-danger" 
+                                  (click)="removeDocument(doc.id!)">
+                            <i class="mdi mdi-delete"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- No Documents Message -->
+            <div class="row" *ngIf="candidateDocuments.length === 0">
+              <div class="col-12">
+                <div class="text-center py-4" style="background-color: #f8f9fa; border: 1px dashed #dee2e6; border-radius: 0.375rem;">
+                  <i class="mdi mdi-file-document-outline text-muted" style="font-size: 3rem;"></i>
+                  <p class="mb-0 text-muted">No data to display</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light waves-effect" (click)="closeCandidateModal()">
+              <i class="mdi mdi-close me-1"></i>Cancel
+            </button>
+            <button type="button" class="btn btn-secondary waves-effect" (click)="resetDocuments()" [disabled]="candidateLoading">
+              <i class="mdi mdi-refresh me-1"></i>Reset
+            </button>
+            <button type="submit" class="btn btn-primary waves-effect waves-light" [disabled]="candidateLoading">
+              <span *ngIf="candidateLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+              <i *ngIf="!candidateLoading" class="mdi mdi-content-save me-1"></i>
+              {{ candidateLoading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update Candidate' : 'Submit Candidate') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal fade" [class.show]="showDeleteModal" [style.display]="showDeleteModal ? 'block' : 'none'" 
+       tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" [attr.aria-hidden]="!showDeleteModal">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteModalLabel">
+            <i class="mdi mdi-delete-alert me-2 text-danger"></i>Confirm Delete
+          </h5>
+          <button type="button" class="btn-close" (click)="closeDeleteModal()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-center">
+            <i class="mdi mdi-alert-circle text-warning" style="font-size: 3rem;"></i>
+            <h5 class="mt-3">Are you sure?</h5>
+            <p class="text-muted">
+              This will permanently delete the candidate. This action cannot be undone.
+            </p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light waves-effect" (click)="closeDeleteModal()">
+            <i class="mdi mdi-close me-1"></i>Cancel
+          </button>
+          <button type="button" class="btn btn-danger waves-effect waves-light" (click)="confirmDelete()">
+            <i class="mdi mdi-delete me-1"></i>Delete Candidate
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Backdrop -->
+  <div *ngIf="showCandidateModal || showDeleteModal" class="modal-backdrop fade show"></div>
+</div>

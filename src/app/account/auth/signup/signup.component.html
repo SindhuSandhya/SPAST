@@ -1,0 +1,209 @@
+<div class="account-pages my-5 pt-sm-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6 col-xl-10">
+        <div class="card overflow-hidden">
+          <div class="card-body pt-0">
+            <div>
+              <div class="avatar-md profile-user-wid mb-4">
+                <span class="avatar-title rounded-circle bg-light">
+                  <img src="assets/images/logo.png" alt="" class="rounded-circle" height="34" />
+                </span>
+              </div>
+            </div>
+            <div class="p-2">
+
+              <!-- ✅ Success Alert -->
+              <div *ngIf="successmsg" class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ successmsg }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+
+              <!-- ❌ Error Alert -->
+              <div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+
+              <form class="needs-validation" [formGroup]="signupForm" (ngSubmit)="onSubmit()" novalidate>
+                
+                <!-- Row 1: Company + Type -->
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="companyName" class="form-label">Company Name <span class="text-danger">*</span></label>
+                    <input 
+                      type="text" 
+                      formControlName="companyName" 
+                      class="form-control"
+                      [class.is-invalid]="hasFieldError('companyName')"
+                      id="companyName"
+                      placeholder="Enter company name" />
+                    <div *ngIf="hasFieldError('companyName')" class="invalid-feedback">
+                      {{ getFieldError('companyName') }}
+                    </div>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="typeOfEstablishment" class="form-label">Type of Establishment <span class="text-danger">*</span></label>
+                    <input 
+                      type="text" 
+                      formControlName="typeOfEstablishment" 
+                      class="form-control"
+                      [class.is-invalid]="hasFieldError('typeOfEstablishment')"
+                      id="typeOfEstablishment" 
+                      placeholder="Enter type" />
+                    <div *ngIf="hasFieldError('typeOfEstablishment')" class="invalid-feedback">
+                      {{ getFieldError('typeOfEstablishment') }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Row 2: Address + CIN -->
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
+                    <input 
+                      type="text" 
+                      formControlName="address" 
+                      class="form-control"
+                      [class.is-invalid]="hasFieldError('address')"
+                      id="address"
+                      placeholder="Enter address" />
+                    <div *ngIf="hasFieldError('address')" class="invalid-feedback">
+                      {{ getFieldError('address') }}
+                    </div>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="cin" class="form-label">CIN</label>
+                    <input 
+                      type="text" 
+                      formControlName="cin" 
+                      class="form-control" 
+                      id="cin" 
+                      placeholder="Enter CIN" />
+                  </div>
+                </div>
+
+                <!-- Row 3: GST + PAN -->
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="gstNo" class="form-label">GST No <span class="text-danger">*</span></label>
+                    <div class="position-relative">
+                      <input 
+                        type="text" 
+                        formControlName="gstNo" 
+                        class="form-control"
+                        [class.is-invalid]="hasFieldError('gstNo')"
+                        id="gstNo"
+                        placeholder="Enter GST No" />
+                      <!-- Loading spinner for async validation -->
+                      <div *ngIf="isFieldValidating('gstNo')" class="position-absolute top-50 end-0 translate-middle-y me-3">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                          <span class="visually-hidden">Validating...</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div *ngIf="hasFieldError('gstNo')" class="invalid-feedback d-block">
+                      {{ getFieldError('gstNo') }}
+                    </div>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="pan" class="form-label">PAN <span class="text-danger">*</span></label>
+                    <input 
+                      type="text" 
+                      formControlName="pan" 
+                      class="form-control"
+                      [class.is-invalid]="hasFieldError('pan')"
+                      id="pan" 
+                      placeholder="Enter PAN" />
+                    <div *ngIf="hasFieldError('pan')" class="invalid-feedback">
+                      {{ getFieldError('pan') }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Row 4: Contact Person -->
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="contactPersonName" class="form-label">Contact Person Name <span class="text-danger">*</span></label>
+                    <input 
+                      type="text" 
+                      formControlName="contactPersonName" 
+                      class="form-control"
+                      [class.is-invalid]="hasFieldError('contactPersonName')"
+                      id="contactPersonName"
+                      placeholder="Enter name" />
+                    <div *ngIf="hasFieldError('contactPersonName')" class="invalid-feedback">
+                      {{ getFieldError('contactPersonName') }}
+                    </div>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="contactPhoneNumber" class="form-label">Contact Phone Number <span class="text-danger">*</span></label>
+                    <div class="position-relative">
+                      <input 
+                        type="text" 
+                        formControlName="contactPhoneNumber" 
+                        class="form-control"
+                        [class.is-invalid]="hasFieldError('contactPhoneNumber')"
+                        id="contactPhoneNumber" 
+                        placeholder="Enter phone number" />
+                      <!-- Loading spinner for async validation -->
+                      <div *ngIf="isFieldValidating('contactPhoneNumber')" class="position-absolute top-50 end-0 translate-middle-y me-3">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                          <span class="visually-hidden">Validating...</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div *ngIf="hasFieldError('contactPhoneNumber')" class="invalid-feedback d-block">
+                      {{ getFieldError('contactPhoneNumber') }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Row 5: Contact Email -->
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="contactEmail" class="form-label">Contact Email <span class="text-danger">*</span></label>
+                    <div class="position-relative">
+                      <input 
+                        type="email" 
+                        formControlName="contactEmail" 
+                        class="form-control"
+                        [class.is-invalid]="hasFieldError('contactEmail')"
+                        id="contactEmail"
+                        placeholder="Enter email" />
+                      <!-- Loading spinner for async validation -->
+                      <div *ngIf="isFieldValidating('contactEmail')" class="position-absolute top-50 end-0 translate-middle-y me-3">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                          <span class="visually-hidden">Validating...</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div *ngIf="hasFieldError('contactEmail')" class="invalid-feedback d-block">
+                      {{ getFieldError('contactEmail') }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-4 d-grid">
+                  <button 
+                    class="btn btn-primary" 
+                    type="submit"
+                    [disabled]="signupForm.pending || submitted">
+                    <span *ngIf="submitted" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    {{ submitted ? 'Registering...' : 'Register' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-5 text-center">
+          <p>Already have an account ?
+            <a (click)="goToLogin()" class="fw-medium text-primary cursor-pointer"> Login</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
