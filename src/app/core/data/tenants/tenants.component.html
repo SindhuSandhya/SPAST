@@ -4,17 +4,13 @@
       <div class="card">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="card-title mb-0">Tenants Data Table</h4>
-            <button class="btn btn-primary btn-sm" (click)="refresh()" [disabled]="loading">
-              <i class="mdi mdi-refresh" [class.mdi-spin]="loading"></i>
-              {{ loading ? 'Loading...' : 'Refresh' }}
-            </button>
+            <h4 class="card-title mb-0">Tenants</h4>
+
           </div>
 
           <!-- Success Message Toast (Top Right) -->
-          <div *ngIf="showSuccessMessage" 
-               class="alert alert-success alert-dismissible fade show position-fixed success-toast" 
-               role="alert">
+          <div *ngIf="showSuccessMessage"
+            class="alert alert-success alert-dismissible fade show position-fixed success-toast" role="alert">
             <div class="d-flex align-items-center">
               <i class="mdi mdi-check-circle me-2 h5 mb-0 text-success"></i>
               <div class="flex-grow-1">
@@ -44,26 +40,21 @@
           </div>
 
           <div class="row mb-md-2">
-            <!-- Page size -->
-            <div class="col-sm-12 col-md-6">
-              <label class="d-inline-flex align-items-center">Show
-                <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="form-control form-control-sm mx-2">
-                  <option [ngValue]="10">10</option>
-                  <option [ngValue]="25">25</option>
-                  <option [ngValue]="50">50</option>
-                </select> entries
-              </label>
-            </div>
-
-            <!-- Search -->
-            <div class="col-sm-12 col-md-6 text-md-end">
-              <label class="d-inline-flex align-items-center">Search:
+            <!-- Search and Refresh Button (Right Aligned) -->
+            <div class="col-sm-12 col-md-12 text-end d-flex justify-content-end align-items-center">
+              <label class="d-inline-flex align-items-center me-2">Search:
                 <input type="text" [(ngModel)]="searchTerm" (input)="applyFilter()"
-                  class="form-control form-control-sm ms-2" 
-                  placeholder="Search tenants..." />
+                  class="form-control form-control-sm ms-2" placeholder="Search tenants..." />
               </label>
+
+              <button class="btn btn-primary btn-sm ms-2" (click)="refresh()" [disabled]="loading">
+                <i class="mdi mdi-refresh" [class.mdi-spin]="loading"></i>
+                {{ loading ? 'Loading...' : 'Refresh' }}
+              </button>
             </div>
           </div>
+
+
 
           <!-- Loading State -->
           <div *ngIf="loading" class="text-center p-4">
@@ -78,9 +69,7 @@
             <table class="table table-bordered dt-responsive nowrap datatables no-footer dtr-inline">
               <thead class="table-light">
                 <tr>
-                  <th>Tenant ID</th>
                   <th>Company Name</th>
-                  <th>Type</th>
                   <th>Contact Person</th>
                   <th>Email</th>
                   <th>Phone</th>
@@ -92,14 +81,11 @@
               </thead>
               <tbody>
                 <tr *ngFor="let tenant of paginatedTenants; trackBy: trackByTenantId">
-                  <td>
-                    <span class="badge bg-info">{{ tenant.tenantId }}</span>
-                  </td>
+
                   <td>
                     <strong>{{ tenant.companyName }}</strong>
                     <small class="d-block text-muted">{{ tenant.address }}</small>
                   </td>
-                  <td>{{ tenant.typeOfEstablishment }}</td>
                   <td>{{ tenant.contactPersonName }}</td>
                   <td>
                     <a [href]="'mailto:' + tenant.contactEmail" class="text-primary">
@@ -115,10 +101,10 @@
                     <code>{{ tenant.gstNo }}</code>
                   </td>
                   <td>
-                    <span class="badge bg-success" *ngIf="tenant.isActive">
+                    <span class="badge badge-pill badge-soft-success font-size-11" *ngIf="tenant.isActive">
                       <i class="mdi mdi-check-circle me-1"></i>Active
                     </span>
-                    <span class="badge bg-danger" *ngIf="!tenant.isActive">
+                    <span class="badge badge-pill badge-soft-danger font-size-11" *ngIf="!tenant.isActive">
                       <i class="mdi mdi-close-circle me-1"></i>Inactive
                     </span>
                   </td>
@@ -130,10 +116,8 @@
                   </td>
                   <td>
                     <div class="dropdown">
-                      <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
-                        type="button" 
-                        data-bs-toggle="dropdown" 
-                        aria-expanded="false">
+                      <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="mdi mdi-dots-vertical"></i>
                       </button>
                       <div class="dropdown-menu dropdown-menu-end">
@@ -148,13 +132,14 @@
                     </div>
                   </td>
                 </tr>
-                
+
                 <!-- Empty State -->
                 <tr *ngIf="paginatedTenants.length === 0">
                   <td colspan="10" class="text-center py-4">
                     <div class="text-muted">
                       <i class="mdi mdi-database-search h1 d-block mb-2"></i>
-                      <p class="mb-0">{{ searchTerm ? 'No tenants found matching your search.' : 'No tenants available.' }}</p>
+                      <p class="mb-0">{{ searchTerm ? 'No tenants found matching your search.' : 'No tenants available.'
+                        }}</p>
                     </div>
                   </td>
                 </tr>
@@ -163,91 +148,87 @@
           </div>
 
           <!-- Pagination -->
-          <div *ngIf="!loading && totalRecords > 0" class="row justify-content-between align-items-center mt-3">
-            <!-- <div class="col-sm-12 col-md-5">
-              <div class="dataTables_info">
-                Showing <strong>{{ (page - 1) * pageSize + 1 }}</strong> to 
-                <strong>{{ Math.min(page * pageSize, totalRecords) }}</strong> of 
-                <strong>{{ totalRecords }}</strong> entries
-                <span *ngIf="searchTerm" class="text-muted"> (filtered from {{ tenants.length }} total)</span>
-              </div>
-            </div> -->
-            <div class="col-sm-12 col-md-7">
+          <div *ngIf="!loading && totalRecords > 0" class="row justify-content-between align-items-center col-12">
+            <div class="col-sm-6 col-md-6 col-lg-6">
+              <label class="d-inline-flex align-items-center">Show
+                <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="form-control form-control-sm mx-2">
+                  <option [ngValue]="10">10</option>
+                  <option [ngValue]="25">25</option>
+                  <option [ngValue]="50">50</option>
+                </select> entries
+              </label>
+            </div>
+
+            <div class="col-sm-6 col-md-6">
               <div class="dataTables_paginate paging_simple_numbers">
                 <nav aria-label="Table pagination">
                   <ul class="pagination pagination-rounded justify-content-end mb-0">
                     <!-- First Page -->
                     <li class="page-item" [class.disabled]="page === 1">
-                      <a class="page-link" href="javascript:void(0);" (click)="page = 1" 
-                         [attr.aria-disabled]="page === 1">
+                      <a class="page-link" href="javascript:void(0);" (click)="page = 1"
+                        [attr.aria-disabled]="page === 1">
                         <i class="mdi mdi-chevron-double-left"></i>
                       </a>
                     </li>
-                    
+
                     <!-- Previous Page -->
                     <li class="page-item" [class.disabled]="page === 1">
-                      <a class="page-link" href="javascript:void(0);" (click)="previousPage()" 
-                         [attr.aria-disabled]="page === 1">
+                      <a class="page-link" href="javascript:void(0);" (click)="previousPage()"
+                        [attr.aria-disabled]="page === 1">
                         <i class="mdi mdi-chevron-left"></i>
                       </a>
                     </li>
-                    
+
                     <!-- Page Numbers -->
                     <ng-container *ngIf="totalPages <= 7">
-                      <!-- Show all pages if total pages <= 7 -->
-                      <li *ngFor="let pageNum of getPageNumbers()" 
-                          class="page-item" [class.active]="pageNum === page">
-                        <a class="page-link" href="javascript:void(0);" 
-                           (click)="goToPage(pageNum)">{{ pageNum }}</a>
+                      <li *ngFor="let pageNum of getPageNumbers()" class="page-item" [class.active]="pageNum === page">
+                        <a class="page-link" href="javascript:void(0);" (click)="goToPage(pageNum)">{{ pageNum }}</a>
                       </li>
                     </ng-container>
-                    
+
                     <ng-container *ngIf="totalPages > 7">
-                      <!-- Complex pagination for many pages -->
-                      
                       <!-- First page -->
                       <li class="page-item" [class.active]="page === 1">
                         <a class="page-link" href="javascript:void(0);" (click)="goToPage(1)">1</a>
                       </li>
-                      
+
                       <!-- Ellipsis after first page if needed -->
                       <li *ngIf="page > 4" class="page-item disabled">
                         <span class="page-link">...</span>
                       </li>
-                      
+
                       <!-- Pages around current page -->
                       <ng-container *ngFor="let pageNum of getVisiblePages()">
-                        <li *ngIf="pageNum > 1 && pageNum < totalPages" 
-                            class="page-item" [class.active]="pageNum === page">
-                          <a class="page-link" href="javascript:void(0);" 
-                             (click)="goToPage(pageNum)">{{ pageNum }}</a>
+                        <li *ngIf="pageNum > 1 && pageNum < totalPages" class="page-item"
+                          [class.active]="pageNum === page">
+                          <a class="page-link" href="javascript:void(0);" (click)="goToPage(pageNum)">{{ pageNum }}</a>
                         </li>
                       </ng-container>
-                      
+
                       <!-- Ellipsis before last page if needed -->
                       <li *ngIf="page < totalPages - 3" class="page-item disabled">
                         <span class="page-link">...</span>
                       </li>
-                      
+
                       <!-- Last page -->
                       <li *ngIf="totalPages > 1" class="page-item" [class.active]="page === totalPages">
-                        <a class="page-link" href="javascript:void(0);" 
-                           (click)="goToPage(totalPages)">{{ totalPages }}</a>
+                        <a class="page-link" href="javascript:void(0);" (click)="goToPage(totalPages)">{{ totalPages
+                          }}</a>
                       </li>
                     </ng-container>
-                    
+
                     <!-- Next Page -->
                     <li class="page-item" [class.disabled]="page >= totalPages">
-                      <a class="page-link" href="javascript:void(0);" (click)="nextPage()" 
-                         [attr.aria-disabled]="page >= totalPages">
+                      <a class="page-link" href="javascript:void(0);" (click)="nextPage()"
+                        [attr.aria-disabled]="page >= totalPages">
                         <i class="mdi mdi-chevron-right"></i>
                       </a>
                     </li>
-                    
+
                     <!-- Last Page -->
                     <li class="page-item" [class.disabled]="page >= totalPages">
-                      <a class="page-link" href="javascript:void(0);" (click)="page = totalPages" 
-                         [attr.aria-disabled]="page >= totalPages">
+                      <a class="page-link" href="javascript:void(0);" (click)="page = totalPages"
+                        [attr.aria-disabled]="page >= totalPages">
                         <i class="mdi mdi-chevron-double-right"></i>
                       </a>
                     </li>
@@ -263,8 +244,8 @@
   </div>
 
   <!-- Edit Tenant Modal -->
-  <div class="modal fade" [class.show]="showEditModal" [style.display]="showEditModal ? 'block' : 'none'" 
-       tabindex="-1" role="dialog" aria-labelledby="editTenantModalLabel" [attr.aria-hidden]="!showEditModal">
+  <div class="modal fade" [class.show]="showEditModal" [style.display]="showEditModal ? 'block' : 'none'" tabindex="-1"
+    role="dialog" aria-labelledby="editTenantModalLabel" [attr.aria-hidden]="!showEditModal">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -273,10 +254,10 @@
           </h4>
           <button type="button" class="btn-close" (click)="closeEditModal()" aria-label="Close"></button>
         </div>
-        
+
         <form [formGroup]="editForm" (ngSubmit)="updateTenant()" novalidate>
           <div class="modal-body">
-            
+
             <!-- Error Alert -->
             <div *ngIf="editError" class="alert alert-danger alert-dismissible fade show" role="alert">
               <i class="mdi mdi-alert me-2"></i>{{ editError }}
@@ -285,17 +266,17 @@
 
             <div class="row">
               <!-- Tenant ID (readonly) -->
-              <div class="col-md-6 mb-3">
+              <!-- <div class="col-md-6 mb-3">
                 <label for="editTenantId" class="form-label">Tenant ID</label>
                 <input type="text" formControlName="tenantId" class="form-control" id="editTenantId" readonly>
-              </div>
-              
+              </div> -->
+
               <!-- Company Name -->
               <div class="col-md-6 mb-3">
                 <label for="editCompanyName" class="form-label">Company Name <span class="text-danger">*</span></label>
-                <input type="text" formControlName="companyName" class="form-control" 
-                       [class.is-invalid]="hasEditFieldError('companyName')"
-                       id="editCompanyName" placeholder="Enter company name">
+                <input type="text" formControlName="companyName" class="form-control"
+                  [class.is-invalid]="hasEditFieldError('companyName')" id="editCompanyName"
+                  placeholder="Enter company name">
                 <div *ngIf="hasEditFieldError('companyName')" class="invalid-feedback">
                   {{ getEditFieldError('companyName') }}
                 </div>
@@ -305,15 +286,16 @@
             <div class="row">
               <!-- Type of Establishment -->
               <div class="col-md-6 mb-3">
-                <label for="editTypeOfEstablishment" class="form-label">Type of Establishment <span class="text-danger">*</span></label>
+                <label for="editTypeOfEstablishment" class="form-label">Type of Establishment <span
+                    class="text-danger">*</span></label>
                 <input type="text" formControlName="typeOfEstablishment" class="form-control"
-                       [class.is-invalid]="hasEditFieldError('typeOfEstablishment')"
-                       id="editTypeOfEstablishment" placeholder="Enter type">
+                  [class.is-invalid]="hasEditFieldError('typeOfEstablishment')" id="editTypeOfEstablishment"
+                  placeholder="Enter type">
                 <div *ngIf="hasEditFieldError('typeOfEstablishment')" class="invalid-feedback">
                   {{ getEditFieldError('typeOfEstablishment') }}
                 </div>
               </div>
-              
+
               <!-- CIN -->
               <div class="col-md-6 mb-3">
                 <label for="editCin" class="form-label">CIN</label>
@@ -324,9 +306,8 @@
             <!-- Address -->
             <div class="mb-3">
               <label for="editAddress" class="form-label">Address <span class="text-danger">*</span></label>
-              <textarea formControlName="address" class="form-control" 
-                        [class.is-invalid]="hasEditFieldError('address')"
-                        id="editAddress" rows="2" placeholder="Enter address"></textarea>
+              <textarea formControlName="address" class="form-control" [class.is-invalid]="hasEditFieldError('address')"
+                id="editAddress" rows="2" placeholder="Enter address"></textarea>
               <div *ngIf="hasEditFieldError('address')" class="invalid-feedback">
                 {{ getEditFieldError('address') }}
               </div>
@@ -337,19 +318,17 @@
               <div class="col-md-6 mb-3">
                 <label for="editGstNo" class="form-label">GST No <span class="text-danger">*</span></label>
                 <input type="text" formControlName="gstNo" class="form-control"
-                       [class.is-invalid]="hasEditFieldError('gstNo')"
-                       id="editGstNo" placeholder="Enter GST No">
+                  [class.is-invalid]="hasEditFieldError('gstNo')" id="editGstNo" placeholder="Enter GST No">
                 <div *ngIf="hasEditFieldError('gstNo')" class="invalid-feedback">
                   {{ getEditFieldError('gstNo') }}
                 </div>
               </div>
-              
+
               <!-- PAN -->
               <div class="col-md-6 mb-3">
                 <label for="editPan" class="form-label">PAN <span class="text-danger">*</span></label>
                 <input type="text" formControlName="pan" class="form-control"
-                       [class.is-invalid]="hasEditFieldError('pan')"
-                       id="editPan" placeholder="Enter PAN">
+                  [class.is-invalid]="hasEditFieldError('pan')" id="editPan" placeholder="Enter PAN">
                 <div *ngIf="hasEditFieldError('pan')" class="invalid-feedback">
                   {{ getEditFieldError('pan') }}
                 </div>
@@ -359,21 +338,23 @@
             <div class="row">
               <!-- Contact Person Name -->
               <div class="col-md-6 mb-3">
-                <label for="editContactPersonName" class="form-label">Contact Person Name <span class="text-danger">*</span></label>
+                <label for="editContactPersonName" class="form-label">Contact Person Name <span
+                    class="text-danger">*</span></label>
                 <input type="text" formControlName="contactPersonName" class="form-control"
-                       [class.is-invalid]="hasEditFieldError('contactPersonName')"
-                       id="editContactPersonName" placeholder="Enter name">
+                  [class.is-invalid]="hasEditFieldError('contactPersonName')" id="editContactPersonName"
+                  placeholder="Enter name">
                 <div *ngIf="hasEditFieldError('contactPersonName')" class="invalid-feedback">
                   {{ getEditFieldError('contactPersonName') }}
                 </div>
               </div>
-              
+
               <!-- Contact Phone Number -->
               <div class="col-md-6 mb-3">
-                <label for="editContactPhoneNumber" class="form-label">Contact Phone Number <span class="text-danger">*</span></label>
+                <label for="editContactPhoneNumber" class="form-label">Contact Phone Number <span
+                    class="text-danger">*</span></label>
                 <input type="text" formControlName="contactPhoneNumber" class="form-control"
-                       [class.is-invalid]="hasEditFieldError('contactPhoneNumber')"
-                       id="editContactPhoneNumber" placeholder="Enter phone number">
+                  [class.is-invalid]="hasEditFieldError('contactPhoneNumber')" id="editContactPhoneNumber"
+                  placeholder="Enter phone number">
                 <div *ngIf="hasEditFieldError('contactPhoneNumber')" class="invalid-feedback">
                   {{ getEditFieldError('contactPhoneNumber') }}
                 </div>
@@ -384,8 +365,7 @@
             <div class="mb-3">
               <label for="editContactEmail" class="form-label">Contact Email <span class="text-danger">*</span></label>
               <input type="email" formControlName="contactEmail" class="form-control"
-                     [class.is-invalid]="hasEditFieldError('contactEmail')"
-                     id="editContactEmail" placeholder="Enter email">
+                [class.is-invalid]="hasEditFieldError('contactEmail')" id="editContactEmail" placeholder="Enter email">
               <div *ngIf="hasEditFieldError('contactEmail')" class="invalid-feedback">
                 {{ getEditFieldError('contactEmail') }}
               </div>

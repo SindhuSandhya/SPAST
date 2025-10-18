@@ -1,0 +1,74 @@
+<div class="container">
+  <div class="row">
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-header">
+          <h5>Upload Excel File</h5>
+        </div>
+        <div class="card-body">
+          <div class="upload-box">
+            <label for="excelUpload" class="upload-label">Drag and drop File</label>
+            <input #excelInput type="file" id="excelUpload" (change)="onFileChange($event, 'excel')" accept=".xlsx,.xls" class="upload-input" />
+            <button type="button" class="btn btn-primary mt-3" (click)="excelInput.click()">Upload Excel File</button>
+
+            <!-- Show selected excel file name -->
+            <div *ngIf="selectedExcelFile" class="mt-2">
+              <strong>Selected:</strong> {{ selectedExcelFile.name }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-header">
+          <h5>Upload Candidate Documents (ZIP)</h5>
+        </div>
+        <div class="card-body">
+          <div class="upload-box">
+            <label for="zipUpload" class="upload-label">Drag and drop Document(s)</label>
+            <input #zipInput type="file" id="zipUpload" (change)="onFileChange($event, 'zip')" accept=".zip" class="upload-input" />
+            <button type="button" class="btn btn-primary mt-3" (click)="zipInput.click()">Upload Zip File</button>
+
+            <!-- Upload progress placeholder -->
+            <div class="mt-3" *ngIf="zipUploading">
+              <div class="d-flex justify-content-between mb-1">
+                <small class="text-muted">Uploading: {{ selectedZipFile?.name || 'Uploading...' }}</small>
+                <small class="text-muted">{{ uploadProgress }}%</small>
+              </div>
+              <div class="progress">
+                <div class="progress-bar" role="progressbar" [style.width.%]="uploadProgress" aria-valuemin="0" aria-valuemax="100">{{ uploadProgress }}%</div>
+              </div>
+            </div>
+
+            <!-- Uploaded file display -->
+            <div class="mt-3" *ngIf="!zipUploading && uploadedZipFileName">
+              <div class="d-flex align-items-center">
+                <i class="mdi mdi-file-zip mr-2" aria-hidden="true"></i>
+                <div class="flex-grow-1">
+                  <strong>{{ uploadedZipFileName }}</strong>
+                  <div class="progress mt-1">
+                    <div class="progress-bar bg-success" role="progressbar" style="width:100%" aria-valuemin="0" aria-valuemax="100">Uploaded</div>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger ml-2" (click)="removeUploadedZip()">Remove</button>
+              </div>
+            </div>
+
+            <!-- Show error if any -->
+            <div *ngIf="importError" class="text-danger mt-2">
+              {{ importError }}
+            </div>
+
+          </div>
+          <small class="text-muted d-block mt-2">
+            It is recommended that the zip file size should not exceed 1 GB.
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="text-center mt-4">
+    <button type="button" class="btn btn-success" (click)="validateUploads()">Validate</button>
+  </div>
+</div>

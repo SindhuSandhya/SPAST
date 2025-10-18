@@ -456,17 +456,17 @@ export class UsersComponent implements OnInit {
   getUserTypeBadgeClass(userType: string): string {
     switch (userType?.toUpperCase()) {
       case 'ADMIN':
-        return 'bg-danger';
+        return 'badge badge-pill badge-soft-danger font-size-11';
       case 'MANAGER':
-        return 'bg-warning';
+        return 'badge badge-pill badge-soft-warning font-size-11';
       case 'EMPLOYEE':
-        return 'bg-info';
+        return 'badge badge-pill badge-soft-info font-size-11';
       case 'TENANTUSER':
-        return 'bg-primary';
+        return 'badge badge-pill badge-soft-primary font-size-11';
       case 'GUEST':
-        return 'bg-secondary';
+        return 'badge badge-pill badge-soft-secondary font-size-11';
       default:
-        return 'bg-secondary';
+        return 'badge badge-pill badge-soft-secondary font-size-11';
     }
   }
 

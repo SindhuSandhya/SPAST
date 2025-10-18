@@ -9,9 +9,8 @@ import { CookieService } from 'ngx-cookie-service';
 import { LanguageService } from '../../core/services/language.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Store } from '@ngrx/store';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
 import { changesLayout } from 'src/app/store/layouts/layout.actions';
-import { getLayoutMode } from 'src/app/store/layouts/layout.selector';
 import { RootReducerState } from 'src/app/store';
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { SimplebarAngularModule } from 'simplebar-angular';
@@ -23,10 +22,6 @@ import { SimplebarAngularModule } from 'simplebar-angular';
   standalone: true,
   imports: [CommonModule, TranslateModule, BsDropdownModule, SimplebarAngularModule],
 })
-
-/**
- * Topbar component
- */
 export class TopbarComponent implements OnInit {
   mode: any;
   element: any;
@@ -37,11 +32,13 @@ export class TopbarComponent implements OnInit {
   theme: any;
   layout: string;
   dataLayout$: Observable<string>;
-  
-  // User data
+
   currentUser: any = null;
   userName: string = '';
   userEmail: string = '';
+
+  // 🔹 Logout modal state
+  showLogoutModal = false;
 
   constructor(
     @Inject(DOCUMENT) private document: any,
@@ -55,45 +52,17 @@ export class TopbarComponent implements OnInit {
     public store: Store<RootReducerState>
   ) {}
 
-  listLang: any = [
-    { text: 'English', flag: 'assets/images/flags/us.jpg', lang: 'en' },
-    { text: 'Spanish', flag: 'assets/images/flags/spain.jpg', lang: 'es' },
-    { text: 'German', flag: 'assets/images/flags/germany.jpg', lang: 'de' },
-    { text: 'Italian', flag: 'assets/images/flags/italy.jpg', lang: 'it' },
-    { text: 'Russian', flag: 'assets/images/flags/russia.jpg', lang: 'ru' },
-  ];
-
-  openMobileMenu: boolean;
-
   @Output() settingsButtonClicked = new EventEmitter();
   @Output() mobileMenuButtonClicked = new EventEmitter();
 
   ngOnInit() {
-    // Load current user data
     this.loadUserData();
-
     this.store.select('layout').subscribe((data) => {
       this.theme = data.DATA_LAYOUT;
     });
-    
-    this.openMobileMenu = false;
     this.element = document.documentElement;
-
-    this.cookieValue = this._cookiesService.get('lang');
-    const val = this.listLang.filter((x) => x.lang === this.cookieValue);
-    this.countryName = val.map((element) => element.text);
-    if (val.length === 0) {
-      if (this.flagvalue === undefined) {
-        this.valueset = 'assets/images/flags/us.jpg';
-      }
-    } else {
-      this.flagvalue = val.map((element) => element.flag);
-    }
   }
 
-  /**
-   * Load current user data from authentication service
-   */
   private loadUserData(): void {
     this.currentUser = this.authGuardService.getCurrentUser();
     if (this.currentUser) {
@@ -102,138 +71,71 @@ export class TopbarComponent implements OnInit {
     }
   }
 
-  setLanguage(text: string, lang: string, flag: string) {
-    this.countryName = text;
-    this.flagvalue = flag;
-    this.cookieValue = lang;
-    this.languageService.setLanguage(lang);
-  }
-
-  /**
-   * Toggles the right sidebar
-   */
   toggleRightSidebar() {
     this.settingsButtonClicked.emit();
   }
 
-  /**
-   * Toggle the menu bar when having mobile screen
-   */
   toggleMobileMenu(event: any) {
     event.preventDefault();
     this.mobileMenuButtonClicked.emit();
   }
 
   /**
-   * Logout the user
+   * 🔹 Show Logout Confirmation Modal
    */
   logout() {
-    // Confirm logout
-    if (confirm('Are you sure you want to logout?')) {
-      // Clear authentication data based on environment
-      if (environment.defaultauth === 'firebase') {
-        this.authService.logout();
-      } else {
-        this.authFackservice.logout();
-      }
-
-      // Clear all authentication data from storage
-      this.clearAllAuthData();
-
-      // Navigate to login page
-      this.router.navigate(['/auth/login']).then(() => {
-        // Prevent back button navigation after logout
-        this.preventBackNavigation();
-      });
-    }
+    this.showLogoutModal = true;
   }
 
   /**
-   * Clear all authentication data
+   * 🔹 Confirm Logout
    */
+  confirmLogout() {
+    this.showLogoutModal = false;
+
+    // Clear authentication data
+    if (environment.defaultauth === 'firebase') {
+      this.authService.logout();
+    } else {
+      this.authFackservice.logout();
+    }
+
+    this.clearAllAuthData();
+
+    // Navigate to login page
+    this.router.navigate(['/auth/login']).then(() => {
+      this.preventBackNavigation();
+    });
+  }
+
+  /**
+   * 🔹 Cancel Logout
+   */
+  cancelLogout() {
+    this.showLogoutModal = false;
+  }
+
   private clearAllAuthData(): void {
-    // Clear localStorage
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userId');
     localStorage.removeItem('currentUser');
     localStorage.removeItem('loginTime');
     localStorage.removeItem('lastSessionId');
-    
-    // Clear sessionStorage
-    sessionStorage.clear();
-
-    // Clear any other auth-related items
     localStorage.removeItem('access_token');
+    sessionStorage.clear();
   }
 
-  /**
-   * Prevent back navigation after logout
-   */
   private preventBackNavigation(): void {
-    // Push a new state to prevent back button
     window.history.pushState(null, '', window.location.href);
-    
-    // Listen for popstate event (back/forward button)
-    const backButtonHandler = (): void => {
+    const backHandler = (): void => {
       window.history.pushState(null, '', window.location.href);
-      
-      // Check if user is not authenticated
       if (!this.authGuardService.isAuthenticated()) {
         this.router.navigate(['/auth/login']);
       }
     };
-
-    window.addEventListener('popstate', backButtonHandler);
-
-    // Clean up after 1 second (to allow navigation to complete)
+    window.addEventListener('popstate', backHandler);
     setTimeout(() => {
-      window.removeEventListener('popstate', backButtonHandler);
+      window.removeEventListener('popstate', backHandler);
     }, 1000);
-  }
-
-  /**
-   * Fullscreen method
-   */
-  fullscreen() {
-    document.body.classList.toggle('fullscreen-enable');
-    if (
-      !document.fullscreenElement &&
-      !this.element.mozFullScreenElement &&
-      !this.element.webkitFullscreenElement
-    ) {
-      if (this.element.requestFullscreen) {
-        this.element.requestFullscreen();
-      } else if (this.element.mozRequestFullScreen) {
-        /* Firefox */
-        this.element.mozRequestFullScreen();
-      } else if (this.element.webkitRequestFullscreen) {
-        /* Chrome, Safari and Opera */
-        this.element.webkitRequestFullscreen();
-      } else if (this.element.msRequestFullscreen) {
-        /* IE/Edge */
-        this.element.msRequestFullscreen();
-      }
-    } else {
-      if (this.document.exitFullscreen) {
-        this.document.exitFullscreen();
-      } else if (this.document.mozCancelFullScreen) {
-        /* Firefox */
-        this.document.mozCancelFullScreen();
-      } else if (this.document.webkitExitFullscreen) {
-        /* Chrome, Safari and Opera */
-        this.document.webkitExitFullscreen();
-      } else if (this.document.msExitFullscreen) {
-        /* IE/Edge */
-        this.document.msExitFullscreen();
-      }
-    }
-  }
-
-  changeLayout(layoutMode: string) {
-    this.theme = layoutMode;
-    this.store.dispatch(changesLayout({ layoutMode }));
-    this.store.select(getLayoutMode).subscribe((layout) => {
-      document.documentElement.setAttribute('data-layout', layout);
-    });
   }
 }

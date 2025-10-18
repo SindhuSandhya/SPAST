@@ -3,11 +3,10 @@
     <div class="row justify-content-center">
       <div class="col-md-8 col-lg-6 col-xl-5">
         <div class="card overflow-hidden">
-          <div class="bg-primary-subtle">
-            <!-- Optional: Add welcome banner here -->
-          </div>
+          <div class="bg-primary-subtle"></div>
+
           <div class="card-body pt-0">
-            <div>
+            <div class="text-center mt-3">
               <a routerLink="/">
                 <div class="avatar-md profile-user-wid mb-4">
                   <span class="avatar-title rounded-circle bg-light">
@@ -16,53 +15,44 @@
                 </div>
               </a>
             </div>
-            <div class="p-2">
-              <form class="form-horizontal" [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
-                
-                <!-- Error Alert -->
-                <div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
-                  <i class="mdi mdi-alert me-2"></i>{{ error }}
-                  <button type="button" class="btn-close" (click)="error = ''" aria-label="Close"></button>
-                </div>
 
-                <!-- Email Field -->
+            <div class="p-2">
+              <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+
+                <!-- Email -->
                 <div class="mb-3">
                   <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
                   <input 
-                    type="email" 
-                    formControlName="email" 
-                    class="form-control" 
-                    id="email" 
+                    type="email"
+                    formControlName="email"
+                    id="email"
                     placeholder="Enter your email"
-                    (input)="onInputChange()"
+                    class="form-control"
                     [class.is-invalid]="submitted && f['email'].errors" />
+
                   <div *ngIf="submitted && f['email'].errors" class="invalid-feedback">
                     <div *ngIf="f['email'].errors?.['required']">Email is required</div>
-                    <div *ngIf="f['email'].errors?.['email']">Please enter a valid email address</div>
+                    <div *ngIf="f['email'].errors?.['email']">Enter a valid email address</div>
                   </div>
                 </div>
 
-                <!-- Password Field -->
+                <!-- Password -->
                 <div class="mb-3">
                   <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
                   <div class="input-group auth-pass-inputgroup">
                     <input 
-                      [type]="fieldTextType ? 'text' : 'password'" 
-                      class="form-control" 
+                      [type]="fieldTextType ? 'text' : 'password'"
                       formControlName="password"
                       id="password"
-                      placeholder="Enter your password" 
-                      (input)="onInputChange()"
-                      [class.is-invalid]="submitted && f['password'].errors">
+                      placeholder="Enter your password"
+                      class="form-control"
+                      [class.is-invalid]="submitted && f['password'].errors" />
 
-                    <button class="btn btn-light ms-0" type="button" id="password-addon" 
-                            (click)="toggleFieldTextType()" 
-                            title="Show/Hide Password">
-                      <i class="mdi" 
-                         [class.mdi-eye-outline]="!fieldTextType" 
-                         [class.mdi-eye-off-outline]="fieldTextType"></i>
+                    <button class="btn btn-light ms-0" type="button" (click)="toggleFieldTextType()">
+                      <i class="mdi" [class.mdi-eye-outline]="!fieldTextType" [class.mdi-eye-off-outline]="fieldTextType"></i>
                     </button>
                   </div>
+
                   <div *ngIf="submitted && f['password'].errors" class="invalid-feedback d-block">
                     <div *ngIf="f['password'].errors?.['required']">Password is required</div>
                     <div *ngIf="f['password'].errors?.['minlength']">Password must be at least 6 characters</div>
@@ -72,9 +62,7 @@
                 <!-- Remember Me -->
                 <div class="form-check mb-3">
                   <input class="form-check-input" type="checkbox" id="remember-check">
-                  <label class="form-check-label" for="remember-check">
-                    Remember me
-                  </label>
+                  <label class="form-check-label" for="remember-check">Remember me</label>
                 </div>
 
                 <!-- Loading Spinner -->
@@ -87,16 +75,14 @@
 
                 <!-- Login Button -->
                 <div class="mt-3 d-grid">
-                  <button class="btn btn-primary waves-effect waves-light" 
-                          type="submit" 
-                          [disabled]="loading">
+                  <button type="submit" class="btn btn-primary waves-effect waves-light" [disabled]="loading">
                     <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
                     <i *ngIf="!loading" class="mdi mdi-login me-1"></i>
                     {{ loading ? 'Signing in...' : 'Sign In' }}
                   </button>
                 </div>
 
-                <!-- Forgot Password Link -->
+                <!-- Forgot Password -->
                 <div class="mt-4 text-center">
                   <a routerLink="/auth/reset-password" class="text-muted">
                     <i class="mdi mdi-lock me-1"></i>Forgot your password?
@@ -110,12 +96,28 @@
         <!-- Signup Link -->
         <div class="mt-5 text-center">
           <p class="text-muted">
-            Don't have an account? 
-            <a (click)="goToSignup()" class="fw-medium text-primary cursor-pointer">
-              Sign up now
-            </a> 
+            Don't have an account?
+            <a routerLink="/auth/signup" class="fw-medium text-primary">Sign up now</a>
           </p>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🔴 Error Modal -->
+<div class="modal fade show" tabindex="-1" [ngClass]="{'d-block': showErrorModal}" *ngIf="showErrorModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">{{ errorTitle }}</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="showErrorModal=false"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p>{{ errorMessage }}</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-light" (click)="showErrorModal=false">Close</button>
       </div>
     </div>
   </div>

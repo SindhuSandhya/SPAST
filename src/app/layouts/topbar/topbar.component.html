@@ -260,7 +260,7 @@
         </button>
       </div> -->
 
-      <div class="dropdown d-inline-block" dropdown>
+      <!-- <div class="dropdown d-inline-block" dropdown>
         <button type="button" class="btn header-item noti-icon" id="page-header-notifications-dropdown" dropdownToggle>
           <i class="bx bx-bell bx-tada"></i>
           <span class="badge bg-danger rounded-pill">3</span>
@@ -345,24 +345,25 @@
             </a>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <div class="dropdown d-inline-block" dropdown>
         <button type="button" class="btn header-item" dropdownToggle id="page-header-user-dropdown">
-          <img class="rounded-circle header-profile-user" src="assets/images/users/avatar-1.jpg" alt="Header Avatar">
+          <i class="bx bx-user-circle font-size-16 align-middle me-1"></i>
+          <!-- <img class="rounded-circle header-profile-user" src="assets/images/users/avatar-1.jpg" alt="Header Avatar"> -->
           <span class="d-none d-xl-inline-block ms-1">Henry </span>
           <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>
         </button>
         <div class="dropdown-menu dropdown-menu-end" *dropdownMenu>
           <!-- item-->
-          <a class="dropdown-item" routerLink="/contacts/profile"><i class="bx bx-user font-size-16 align-middle me-1"></i>
-            {{ 'HEADER.LOGIN.PROFILE' | translate}}</a>
-          <a class="dropdown-item" routerLink="/crypto/wallet" href="javascript: void(0);"><i class="bx bx-wallet font-size-16 align-middle me-1"></i>{{ 'HEADER.LOGIN.MY_WALLET' | translate}}</a>
+          <!-- <a class="dropdown-item" routerLink="/contacts/profile"><i class="bx bx-user font-size-16 align-middle me-1"></i>
+            {{ 'HEADER.LOGIN.PROFILE' | translate}}</a> -->
+          <!-- <a class="dropdown-item" routerLink="/crypto/wallet" href="javascript: void(0);"><i class="bx bx-wallet font-size-16 align-middle me-1"></i>{{ 'HEADER.LOGIN.MY_WALLET' | translate}}</a>
           <a class="dropdown-item d-block" href="javascript: void(0);"><span class="badge bg-success float-end">11</span><i class="bx bx-wrench font-size-16 align-middle me-1"></i>{{
             'HEADER.LOGIN.SETTINGS' | translate}} </a>
           <a class="dropdown-item" routerLink="/pages/lock-screen-1"><i class="bx bx-lock-open font-size-16 align-middle me-1"></i>
             {{ 'HEADER.LOGIN.LOCK_SCREEN' | translate}}</a>
-          <div class="dropdown-divider"></div>
+          <div class="dropdown-divider"></div> -->
           <a class="dropdown-item text-danger" href="javascript: void(0);" (click)="logout()"><i class="bx bx-power-off font-size-16 align-middle me-1 text-danger"></i>
             {{ 'HEADER.LOGIN.LOGOUT' | translate}}</a>
         </div>
@@ -377,3 +378,27 @@
     </div>
   </div>
 </header>
+
+<!-- 🔴 Logout Confirmation Modal -->
+<div class="modal fade show" tabindex="-1" [ngClass]="{'d-block': showLogoutModal}" *ngIf="showLogoutModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header  text-dark">
+        <h5 class="modal-title"><i class="bx bx-log-out-circle me-2"></i>Confirm Logout</h5>
+        <button type="button" class="btn-close" (click)="cancelLogout()"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p class="fs-6">Are you sure you want to log out from your session?</p>
+        <p class="text-muted mb-0">You’ll need to log in again to access your dashboard.</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary" (click)="cancelLogout()">
+          <i class="bx bx-x me-1"></i>Cancel
+        </button>
+        <button type="button" class="btn btn-danger" (click)="confirmLogout()">
+          <i class="bx bx-power-off me-1"></i>Logout
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

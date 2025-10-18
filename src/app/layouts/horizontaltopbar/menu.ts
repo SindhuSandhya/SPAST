@@ -1,3 +1,4 @@
+
 import { MenuItem } from './menu.model';
 
 export const MENU: MenuItem[] = [
@@ -28,7 +29,21 @@ export const MENU: MenuItem[] = [
         link: '/candidates',
 
     },
-
+    {
+        id: 5,
+        label: 'Configuration',
+        icon: 'bx bx-briefcase',
+        link: '/configuration',
+        subItems: [
+            {
+                id: 1,
+                label: 'Competency List',
+                link: '/configuration/competency-list'
+            }
+        ]
+    }
 
 ];
+
+
 

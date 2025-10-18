@@ -1,0 +1,17 @@
+.card {
+  border-radius: 0.75rem;
+
+  .table {
+    th, td {
+      vertical-align: middle;
+    }
+  }
+
+  .btn-outline-danger {
+    padding: 0.25rem 0.5rem;
+  }
+
+  input.form-control-sm {
+    height: 30px;
+  }
+}

@@ -1,0 +1,115 @@
+<div class="card shadow-sm">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Competencies</h5>
+    <button
+      class="btn btn-sm btn-success"
+      [disabled]="saving || !competencies.length"
+      (click)="openSaveModal()"
+    >
+      <i class="bx bx-save"></i> {{ saving ? 'Saving...' : 'Save' }}
+    </button>
+  </div>
+
+  <div class="card-body p-0">
+    <table class="table table-striped mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th style="width: 10%">Active</th>
+          <th>Competency Name</th>
+          <th style="width: 15%">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of competencies; let i = index">
+          <td class="text-center">
+            <!-- ✅ Removed (change)="toggleStatus()" -->
+            <input
+              type="checkbox"
+              class="form-check-input"
+              [(ngModel)]="c.isActive"
+            />
+          </td>
+          <td>{{ c.competencyName }}</td>
+          <td>
+            <button
+              class="btn btn-sm btn-outline-danger"
+              (click)="openDeleteModal(c)"
+            >
+              <i class="bx bx-trash"></i>
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="!competencies.length && !loading">
+          <td colspan="3" class="text-center text-muted p-3">
+            No competencies found
+          </td>
+        </tr>
+
+        <tr *ngIf="loading">
+          <td colspan="3" class="text-center p-3">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Save Confirmation Modal -->
+<div class="modal fade show" tabindex="-1" [ngClass]="{'d-block': showSaveModal}" *ngIf="showSaveModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title">Confirm Save</h5>
+        <button type="button" class="btn-close" (click)="showSaveModal=false"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to save all changes to competencies?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" (click)="showSaveModal=false">Cancel</button>
+        <button type="button" class="btn btn-success" (click)="confirmSave()">Yes, Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade show" tabindex="-1" [ngClass]="{'d-block': showDeleteModal}" *ngIf="showDeleteModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Confirm Delete</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="showDeleteModal=false"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete "<b>{{ selectedCompetency?.competencyName }}</b>"?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" (click)="showDeleteModal=false">Cancel</button>
+        <button type="button" class="btn btn-danger" (click)="confirmDelete()">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade show" tabindex="-1" [ngClass]="{'d-block': showSuccessModal}" *ngIf="showSuccessModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">Success</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="showSuccessModal=false"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p>{{ successMessage }}</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-light" (click)="showSuccessModal=false">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

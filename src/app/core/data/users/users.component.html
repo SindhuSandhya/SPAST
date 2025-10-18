@@ -4,15 +4,9 @@
       <div class="card">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="card-title mb-0">Users Data Table</h4>
+            <h4 class="card-title mb-0">Users</h4>
             <div class="d-flex gap-2">
-              <button class="btn btn-primary btn-sm" (click)="refresh()" [disabled]="loading">
-                <i class="mdi mdi-refresh" [class.mdi-spin]="loading"></i>
-                {{ loading ? 'Loading...' : 'Refresh' }}
-              </button>
-              <button class="btn btn-success btn-sm" (click)="openAddModal()">
-                <i class="mdi mdi-plus me-1"></i>Add User
-              </button>
+
             </div>
           </div>
 
@@ -39,26 +33,25 @@
 
           <div class="row mb-md-2">
             <!-- Page size -->
-            <div class="col-sm-12 col-md-6">
-              <label class="d-inline-flex align-items-center">Show
-                <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="form-control form-control-sm mx-2">
-                  <option [ngValue]="10">10</option>
-                  <option [ngValue]="25">25</option>
-                  <option [ngValue]="50">50</option>
-                </select> entries
-              </label>
-            </div>
 
             <!-- Search -->
-            <div class="col-sm-12 col-md-6 text-md-end">
+            <div class="col-sm-12 col-md-12 text-md-end">
+
               <label class="d-inline-flex align-items-center">Search:
                 <input type="text" [(ngModel)]="searchTerm" (input)="applyFilter()"
                   class="form-control form-control-sm ms-2" placeholder="Search users..." />
               </label>
+              <button class="btn btn-primary btn-sm m-2" (click)="refresh()" [disabled]="loading">
+                <i class="mdi mdi-refresh" [class.mdi-spin]="loading"></i>
+                {{ loading ? 'Loading...' : 'Refresh' }}
+              </button>
+              <button class="btn btn-success btn-sm m-2" (click)="openAddModal()">
+                <i class="mdi mdi-plus me-1"></i>Add User
+              </button>
             </div>
           </div>
 
-    
+
 
           <!-- Loading State -->
           <div *ngIf="loading" class="text-center p-4">
@@ -73,7 +66,6 @@
             <table class="table table-bordered dt-responsive nowrap datatables no-footer dtr-inline">
               <thead class="table-light">
                 <tr>
-                  <th>User ID</th>
                   <th>Full Name</th>
                   <th>Company</th>
                   <th>Email</th>
@@ -86,10 +78,7 @@
               </thead>
               <tbody>
                 <tr *ngFor="let user of paginatedUsers; trackBy: trackByUserId">
-                  <td>
-                    <!-- FIXED: Handle null userId -->
-                    <span class="badge bg-info">{{ getDisplayUserId(user) }}</span>
-                  </td>
+
                   <td>
                     <strong>{{ user.fullName }}</strong>
                   </td>
@@ -114,10 +103,10 @@
                     </span>
                   </td>
                   <td>
-                    <span class="badge bg-success" *ngIf="user.active">
+                    <span class="badge badge-pill badge-soft-success font-size-11" *ngIf="user.active">
                       <i class="mdi mdi-check-circle me-1"></i>Active
                     </span>
-                    <span class="badge bg-danger" *ngIf="!user.active">
+                    <span class="badge badge-pill badge-soft-danger font-size-11" *ngIf="!user.active">
                       <i class="mdi mdi-close-circle me-1"></i>Inactive
                     </span>
                   </td>
@@ -161,16 +150,18 @@
           </div>
 
           <!-- Pagination -->
-          <div *ngIf="!loading && totalRecords > 0" class="row justify-content-between align-items-center mt-3">
-            <div class="col-sm-12 col-md-5">
-              <div class="dataTables_info">
-                <!-- Showing <strong>{{ (page - 1) * pageSize + 1 }}</strong> to
-                <strong>{{ Math.min(page * pageSize, totalRecords) }}</strong> of
-                <strong>{{ totalRecords }}</strong> entries -->
-                <span *ngIf="searchTerm" class="text-muted"> (filtered from {{ users.length }} total)</span>
-              </div>
+         <div *ngIf="!loading && totalRecords > 0" class="row justify-content-between align-items-center col-12">
+            <div class="col-sm-6 col-md-6 col-lg-6">
+              <label class="d-inline-flex align-items-center">Show
+                <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="form-control form-control-sm mx-2">
+                  <option [ngValue]="10">10</option>
+                  <option [ngValue]="25">25</option>
+                  <option [ngValue]="50">50</option>
+                </select> entries
+              </label>
             </div>
-            <div class="col-sm-12 col-md-7">
+
+            <div class="col-sm-6 col-md-6">
               <div class="dataTables_paginate paging_simple_numbers">
                 <nav aria-label="Table pagination">
                   <ul class="pagination pagination-rounded justify-content-end mb-0">

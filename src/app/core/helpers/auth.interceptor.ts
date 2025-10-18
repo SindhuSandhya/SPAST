@@ -7,13 +7,13 @@ import { Router } from '@angular/router';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-  
+
   constructor(private router: Router) { }
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     let authReq = req;
     const userId = this.getUserId();
-    
+
     // Add userId header if user is authenticated and endpoint is not public
     if (userId && !this.isPublicEndpoint(req.url)) {
       authReq = req.clone({
@@ -52,7 +52,7 @@ export class AuthInterceptor implements HttpInterceptor {
       '/tenant/contactEmailExists',
       '/tenant/contactPhoneNumberExists'
     ];
-    
+
     return publicEndpoints.some(endpoint => url.includes(endpoint));
   }
 
@@ -60,7 +60,7 @@ export class AuthInterceptor implements HttpInterceptor {
   private handleUnauthorized(): void {
     // Clear stored authentication data
     this.clearAuthData();
-    
+
     // Redirect to login page
     this.router.navigate(['/auth/login'], {
       queryParams: { returnUrl: this.router.url }
@@ -83,7 +83,7 @@ export class AuthInterceptor implements HttpInterceptor {
   providedIn: 'root'
 })
 export class AuthGuardService {
-  
+
   constructor(private router: Router) {
     // Listen for storage events (logout in another tab)
     this.setupStorageListener();
@@ -104,7 +104,7 @@ export class AuthGuardService {
     const userId = localStorage.getItem('userId');
     const activeSession = sessionStorage.getItem('activeSession');
     const lastSessionId = localStorage.getItem('lastSessionId');
-    
+
     // Check if all required data exists
     if (isLoggedIn !== 'true' || !user || !userId) {
       this.clearAuthData();
@@ -227,7 +227,20 @@ export class TokenStorageService {
     const activeSession = sessionStorage.getItem('activeSession');
     return isLoggedIn === 'true' && !!activeSession;
   }
+
+  // Get user role from localStorage
+  getUserRole(): string {
+    return localStorage.getItem('userRole') || '';
+  }
+
+  // Check if current user has the required role
+  hasRole(requiredRole: string): boolean {
+    const role = this.getUserRole();
+    return role === requiredRole;
+  }
 }
+
+
 
 // Export provider
 export const authInterceptorProviders = [
