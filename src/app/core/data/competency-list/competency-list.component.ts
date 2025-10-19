@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { environment } from 'src/environments/environment.prod';
 
 interface Competency {
   competencyId: string;
@@ -39,14 +40,14 @@ export class CompetencyListComponent implements OnInit {
   /** Fetch master competencies */
   fetchCompetencies() {
     this.loading = true;
-    this.http.get<any>('http://35.154.101.131:8086/competencies/getAllCompetencies')
+    this.http.get<any>(`${environment.apiUrl}/competencies/getAllCompetencies?tenantId=${this.tenantId}`)
       .subscribe({
         next: (res) => {
           if (res && res.status?.statusCode === 302 && Array.isArray(res.data)) {
             this.competencies = res.data.map((c: any) => ({
               competencyId: c.competencyId,
               competencyName: c.competencyName,
-              isActive: true
+              isActive: c.isActive
             }));
           } else {
             this.competencies = [];
@@ -75,7 +76,7 @@ export class CompetencyListComponent implements OnInit {
     if (!this.competencies.length) return;
 
     this.saving = true;
-    const url = `http://35.154.101.131:8086/tenantLevelCompetencies/saveAllCompetencies?tenantId=${this.tenantId}`;
+    const url = `${environment.apiUrl}/tenantLevelCompetencies/saveAllCompetencies?tenantId=${this.tenantId}`;
     const payload = this.competencies.map(c => ({
       competencyId: c.competencyId,
       competencyName: c.competencyName,
@@ -109,7 +110,7 @@ export class CompetencyListComponent implements OnInit {
     if (!this.selectedCompetency) return;
     const c = this.selectedCompetency;
 
-    const url = `http://35.154.101.131:8086/tenantLevelCompetencies/deleteCometencys?tenantId=${this.tenantId}`;
+    const url = `${environment.apiUrl}/tenantLevelCompetencies/deleteCompetency?tenantId=${this.tenantId}`;
     this.http.request('delete', url, { body: { competencyId: c.competencyId } })
       .subscribe({
         next: () => {

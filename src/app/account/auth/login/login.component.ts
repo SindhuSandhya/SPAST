@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { ToastrService } from 'ngx-toastr';
 
 interface LoginResponse {
   id: string | null;
@@ -53,8 +54,9 @@ export class LoginComponent implements OnInit {
     private formBuilder: UntypedFormBuilder,
     private route: ActivatedRoute,
     private router: Router,
-    private http: HttpClient
-  ) {}
+    private http: HttpClient,
+    private toastService: ToastrService
+  ) { }
 
   ngOnInit() {
     if (this.isLoggedIn()) {
@@ -86,7 +88,7 @@ export class LoginComponent implements OnInit {
     this.submitted = true;
 
     if (this.loginForm.invalid) {
-      this.openErrorModal('Validation Error', 'Please enter a valid email and password.');
+      this.toastService.error('Validation Error', 'Please enter a valid email and password.');
       return;
     }
 
@@ -100,16 +102,21 @@ export class LoginComponent implements OnInit {
       next: (response) => {
         this.loading = false;
 
-        if (response.status.statusCode === 112 && response.data) {
+        if (response.status?.statusCode === 112 && response.data) {
           if (!response.data.active) {
-            this.openErrorModal('Account Inactive', 'Your account is inactive. Please contact the administrator.');
+            this.toastService.error('Account Inactive', 'Your account is inactive. Please contact the administrator.');
             return;
           }
-
+          sessionStorage.setItem('tenantId', response.data.tenantId);
+          sessionStorage.setItem('userData', JSON.stringify(response.data));
           this.storeAuthData(response.data);
           this.router.navigate([this.returnUrl]);
-        } else {
-          this.openErrorModal('Login Failed', response.status.statusMessage || 'Unable to login. Please try again.');
+        } else if (response.errors && response.errors.length > 0) {
+          const errorMessages = response.errors.map((err: any) => err.message).join(' ');
+          this.toastService.error(response.errors[0].errorMessage, errorMessages);
+        }
+        else {
+          this.toastService.error('Login Failed', response.status.statusMessage || 'Unable to login. Please try again.');
         }
       },
       error: (err) => {
@@ -117,13 +124,13 @@ export class LoginComponent implements OnInit {
         console.error('Login error:', err);
 
         if (err.status === 401) {
-          this.openErrorModal('Invalid Credentials', 'Incorrect email or password. Please try again.');
+          this.toastService.error('Invalid Credentials', 'Incorrect email or password. Please try again.');
         } else if (err.status === 403) {
-          this.openErrorModal('Account Inactive', 'Your account is inactive. Please contact the administrator.');
+          this.toastService.error('Account Inactive', 'Your account is inactive. Please contact the administrator.');
         } else if (err.error?.status?.statusMessage) {
-          this.openErrorModal('Error', err.error.status.statusMessage);
+          this.toastService.error('Error', err.error.status.statusMessage);
         } else {
-          this.openErrorModal('Connection Error', 'Login failed. Please check your internet connection and try again.');
+          this.toastService.error('Connection Error', 'Login failed. Please check your internet connection and try again.');
         }
       }
     });

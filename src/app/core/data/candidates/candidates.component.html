@@ -48,20 +48,10 @@
               <button class="btn btn-success btn-sm m-2" (click)="openAddModal()">
                 <i class="mdi mdi-plus me-1"></i>Add Candidate
               </button>
-                       <button class="btn btn-success btn-sm m-2" (click)="openBulkImportModal()">
+              <button class="btn btn-success btn-sm m-2" (click)="openBulkImportModal()">
                 <i class="mdi mdi-plus me-1"></i>Bulk Import Candidate
               </button>
             </div>
-          </div>
-
-          <!-- Debug Info (Remove in production) -->
-          <div class="alert alert-info mb-3" *ngIf="!loading">
-            <small>
-              <strong>Debug Info:</strong>
-              Total Candidates: {{ candidates.length }},
-              Filtered: {{ filteredCandidates.length }},
-              Current Page: {{ page }}/{{ totalPages }}
-            </small>
           </div>
 
           <!-- Loading State -->
@@ -81,9 +71,7 @@
                   <th>Email</th>
                   <th>Mobile</th>
                   <th>Gender</th>
-                  <th>Location</th>
-                  <th>Employment Type</th>
-                  <th>Case Date</th>
+                  <!-- <th>Date of Birth</th> -->
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -91,7 +79,8 @@
               <tbody>
                 <tr *ngFor="let candidate of paginatedCandidates; trackBy: trackByCandidateId">
                   <td>
-                    <strong>{{ candidate.fullName }}</strong>
+                    <strong>{{ candidate.fullName ? candidate.fullName : candidate.firstName + ' ' + candidate.lastName
+                      }}</strong>
                     <div class="text-muted small">{{ candidate.fatherName }}</div>
                   </td>
                   <td>
@@ -100,8 +89,8 @@
                     </a>
                   </td>
                   <td>
-                    <a [href]="'tel:+91' + candidate.mobile" class="text-primary">
-                      +91 {{ candidate.mobile }}
+                    <a [href]="'tel:+91' + candidate.mobileNumber" class="text-primary">
+                      +91 {{ candidate.mobileNumber }}
                     </a>
                   </td>
                   <td>
@@ -109,27 +98,22 @@
                       {{ formatGender(candidate.gender) }}
                     </span>
                   </td>
-                  <td>
-                    <span class="text-muted">{{ candidate.location }}</span>
-                  </td>
-                  <td>
-                    <span class="badge" [ngClass]="getEmploymentTypeBadgeClass(candidate.employmentType)">
-                      {{ formatEmploymentType(candidate.employmentType) }}
-                    </span>
-                  </td>
-                  <td>
+                 
+                
+                  <!-- <td>
                     <small>{{ formatDate(candidate.caseReceiveDate) }}</small>
                     <div class="text-muted" style="font-size: 0.75rem;">
                       DOB: {{ formatDate(candidate.dateOfBirth) }}
                     </div>
-                  </td>
+                  </td> -->
                   <td>
-                    <span class="badge badge-pill badge-soft-success font-size-11" *ngIf="candidate.active">
-                      <i class="mdi mdi-check-circle me-1"></i>Active
+                    --
+                    <!-- <span class="badge badge-pill badge-soft-success font-size-11" *ngIf="candidate.active">
+                      <i class="mdi mdi-check-circle me-1"></i>-
                     </span>
                     <span class="badge badge-pill badge-soft-danger font-size-11" *ngIf="!candidate.active">
-                      <i class="mdi mdi-close-circle me-1"></i>Inactive
-                    </span>
+                      <i class="mdi mdi-close-circle me-1"></i>-
+                    </span> -->
                   </td>
                   <td>
                     <div class="dropdown">
@@ -139,8 +123,13 @@
                       </button>
                       <div class="dropdown-menu dropdown-menu-end">
                         <a class="dropdown-item" href="javascript:void(0);"
-                          (click)="openEditModalWithLocations(candidate)">
+                          (click)="openEditModal(candidate)">
                           <i class="mdi mdi-pencil me-2"></i>Edit
+                        </a>
+
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="javascript:void(0);" (click)="openAssignCheckModal(candidate)">
+                          <i class="mdi mdi-eye me-2"></i>Assign Check
                         </a>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item text-danger" href="javascript:void(0);"
@@ -263,23 +252,23 @@
     </div>
   </div>
 
-<!--Bulk Import Modal-->
-<div class="modal fade" [class.show]="showImportModal" [style.display]="showImportModal ? 'block' : 'none'"
-  tabindex="-1" role="dialog" aria-labelledby="bulkImportModalLabel" [attr.aria-hidden]="!showImportModal">
-  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title" id="bulkImportModalLabel">
-          <i class="mdi mdi-upload me-2"></i>Bulk Import Candidates
-        </h4>
-        <button type="button" class="btn-close" (click)="closeBulkImportModal()" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <app-bulk-import-candidates (importSuccess)="importSuccess($event)"></app-bulk-import-candidates>
+  <!--Bulk Import Modal-->
+  <div class="modal fade" [class.show]="showImportModal" [style.display]="showImportModal ? 'block' : 'none'"
+    tabindex="-1" role="dialog" aria-labelledby="bulkImportModalLabel" [attr.aria-hidden]="!showImportModal">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="bulkImportModalLabel">
+            <i class="mdi mdi-upload me-2"></i>Bulk Import Candidates
+          </h4>
+          <button type="button" class="btn-close" (click)="closeBulkImportModal()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <app-bulk-import-candidates (importSuccess)="importSuccess($event)"></app-bulk-import-candidates>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
   <!-- Candidate Modal -->
   <div class="modal fade" [class.show]="showCandidateModal" [style.display]="showCandidateModal ? 'block' : 'none'"
@@ -296,17 +285,7 @@
         <form [formGroup]="candidateForm" (ngSubmit)="onSubmit()" novalidate>
           <div class="modal-body">
 
-            <!-- Debug Info (Remove in production) -->
-            <div class="alert alert-info mb-3" *ngIf="isEditMode">
-              <small>
-                <strong>Debug - Current Candidate Data:</strong><br>
-                Candidate ID: {{ currentCandidate?.candidateId || currentCandidate?.id || 'N/A' }}<br>
-                Location ID: {{ currentCandidate?.location || 'N/A' }}<br>
-                Form candidateId: {{ candidateForm.get('candidateId')?.value || 'Empty' }}<br>
-                Form location: {{ candidateForm.get('location')?.value || 'Empty' }}<br>
-                Available Locations: {{ locations.length }}
-              </small>
-            </div>
+  
 
             <!-- Error Alert -->
             <div *ngIf="candidateError" class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -359,7 +338,7 @@
 
             <div class="row">
               <!-- Last Name -->
-              <div class="col-md-4 mb-3">
+              <div class="col-md-6 mb-3">
                 <label for="lastName" class="form-label">
                   <span class="text-danger">*</span> Last Name
                   <i class="mdi mdi-information-outline text-info ms-1" title="Enter Last Name"></i>
@@ -371,21 +350,9 @@
                 </div>
               </div>
 
-              <!-- Father's Name -->
-              <div class="col-md-4 mb-3">
-                <label for="fatherName" class="form-label">
-                  <span class="text-danger">*</span> Father's Name
-                  <i class="mdi mdi-information-outline text-info ms-1" title="Enter Father's Name"></i>
-                </label>
-                <input type="text" formControlName="fatherName" class="form-control"
-                  [class.is-invalid]="hasFieldError('fatherName')" id="fatherName" placeholder="Enter Father's Name">
-                <div *ngIf="hasFieldError('fatherName')" class="invalid-feedback">
-                  {{ getFieldError('fatherName') }}
-                </div>
-              </div>
 
               <!-- Date of Birth -->
-              <div class="col-md-4 mb-3">
+              <div class="col-md-6 mb-3">
                 <label for="dateOfBirth" class="form-label">
                   <span class="text-danger">*</span> Date of Birth
                   <i class="mdi mdi-information-outline text-info ms-1" title="dd-mm-yyyy"></i>
@@ -425,11 +392,11 @@
                 </label>
                 <div class="input-group">
                   <span class="input-group-text">+91</span>
-                  <input type="text" formControlName="mobile" class="form-control"
-                    [class.is-invalid]="hasFieldError('mobile')" id="mobile" placeholder="Enter Mobile Number">
+                  <input type="text" formControlName="mobileNumber" class="form-control"
+                    [class.is-invalid]="hasFieldError('mobileNumber')" id="mobile" placeholder="Enter Mobile Number">
                 </div>
-                <div *ngIf="hasFieldError('mobile')" class="invalid-feedback">
-                  {{ getFieldError('mobile') }}
+                <div *ngIf="hasFieldError('mobileNumber')" class="invalid-feedback">
+                  {{ getFieldError('mobileNumber') }}
                 </div>
               </div>
 
@@ -456,63 +423,9 @@
               </div>
             </div>
 
-            <div class="row">
-              <!-- Date of Joining -->
-              <div class="col-md-4 mb-3">
-                <label for="dateOfJoining" class="form-label">
-                  Date of Joining
-                  <i class="mdi mdi-information-outline text-info ms-1" title="dd-mm-yyyy"></i>
-                </label>
-                <input type="date" formControlName="dateOfJoining" class="form-control" id="dateOfJoining">
-              </div>
-
-              <!-- Case Receive Date -->
-              <div class="col-md-4 mb-3">
-                <label for="caseReceiveDate" class="form-label">
-                  <span class="text-danger">*</span> Case Receive Date
-                  <i class="mdi mdi-information-outline text-info ms-1" title="27-09-2025"></i>
-                </label>
-                <input type="date" formControlName="caseReceiveDate" class="form-control"
-                  [class.is-invalid]="hasFieldError('caseReceiveDate')" id="caseReceiveDate">
-                <div *ngIf="hasFieldError('caseReceiveDate')" class="invalid-feedback">
-                  {{ getFieldError('caseReceiveDate') }}
-                </div>
-              </div>
-
-              <!-- Employee ID -->
-              <div class="col-md-4 mb-3">
-                <label for="employeeId" class="form-label">
-                  Employee ID
-                  <i class="mdi mdi-information-outline text-info ms-1" title="Enter Employee ID"></i>
-                </label>
-                <input type="text" formControlName="employeeId" class="form-control" id="employeeId"
-                  placeholder="Enter Employee ID">
-              </div>
-            </div>
 
             <div class="row">
-              <!-- Location -->
-              <div class="col-md-4 mb-3">
-                <label for="location" class="form-label">
-                  <span class="text-danger">*</span> Location
-                  <i class="mdi mdi-information-outline text-info ms-1" title="Select Location"></i>
-                </label>
-                <select formControlName="location" class="form-control" [class.is-invalid]="hasFieldError('location')"
-                  id="location">
-                  <option value="">Select Location</option>
-                  <option *ngFor="let location of locations" [value]="location.locationId">
-                    {{ location.locationName }}, {{ location.city }}, {{ location.state }}
-                  </option>
-                </select>
-                <div *ngIf="hasFieldError('location')" class="invalid-feedback">
-                  {{ getFieldError('location') }}
-                </div>
-                <small class="text-muted" *ngIf="isEditMode">
-                  Current: {{ currentCandidate?.location || 'None' }} |
-                  Form: {{ candidateForm.get('location')?.value || 'Empty' }} |
-                  Locations loaded: {{ locations.length }}
-                </small>
-              </div>
+
 
               <!-- UAN -->
               <div class="col-md-4 mb-3">
@@ -523,157 +436,14 @@
                 <input type="text" formControlName="uan" class="form-control" id="uan" placeholder="Enter UAN">
               </div>
 
-              <!-- Employment Type -->
-              <div class="col-md-4 mb-3">
-                <label for="employmentType" class="form-label">
-                  <span class="text-danger">*</span> Employment Type
-                  <i class="mdi mdi-information-outline text-info ms-1" title="Pre Employment | Post Employment"></i>
-                </label>
-                <select formControlName="employmentType" class="form-control"
-                  [class.is-invalid]="hasFieldError('employmentType')" id="employmentType">
-                  <option value="">Select Employment Type</option>
-                  <option *ngFor="let option of employmentTypeOptions" [value]="option.value">
-                    {{ option.label }}
-                  </option>
-                </select>
-                <div *ngIf="hasFieldError('employmentType')" class="invalid-feedback">
-                  {{ getFieldError('employmentType') }}
-                </div>
-              </div>
             </div>
 
-            <div class="row">
-              <!-- Active Status -->
-              <div class="col-md-6 mb-3">
-                <div class="form-check mt-2">
-                  <input type="checkbox" class="form-check-input" formControlName="active" id="active">
-                  <label class="form-check-label" for="active">
-                    <strong>Active Status</strong>
-                  </label>
-                </div>
-                <small class="text-muted">Check to make this candidate active</small>
-              </div>
-            </div>
 
-            <!-- Documents Section -->
-            <div class="row mb-3 mt-4">
-              <div class="col-12">
-                <h5 class="text-primary border-bottom pb-2">
-                  <i class="mdi mdi-file-multiple me-2"></i>Documents
-                </h5>
-              </div>
-            </div>
 
-            <!-- Document Upload Controls -->
-            <div class="row mb-3">
-              <!-- Document Type Dropdown -->
-              <div class="col-md-6 mb-3">
-                <label for="documentType" class="form-label">
-                  Document Type
-                  <i class="mdi mdi-information-outline text-info ms-1"
-                    title="Select document type before uploading"></i>
-                </label>
-                <select [(ngModel)]="selectedDocumentType" class="form-control" id="documentType"
-                  [ngModelOptions]="{standalone: true}">
-                  <option value="">Select Document Type</option>
-                  <option *ngFor="let docType of documentTypes" [value]="docType.id">
-                    {{ docType.typeName }}
-                  </option>
-                </select>
-              </div>
+          
 
-              <!-- Upload Area -->
-              <div class="col-md-6 mb-3">
-                <label class="form-label">
-                  Documents
-                  <i class="mdi mdi-information-outline text-info ms-1"
-                    title="Upload files - Max 10 files, 2MB each"></i>
-                </label>
-                <div class="upload-area" [class.drag-over]="dragOver" (dragover)="onDragOver($event)"
-                  (dragleave)="onDragLeave($event)" (drop)="onDrop($event)" (click)="addDocument()">
-                  <div class="upload-content">
-                    <i class="mdi mdi-cloud-upload text-muted" style="font-size: 2rem;"></i>
-                    <p class="mb-1">
-                      <i class="mdi mdi-folder text-warning me-1"></i>Upload file
-                    </p>
-                    <small class="text-muted">Click to browse or drag and drop</small>
-                  </div>
-                </div>
-                <input type="file" id="fileInput" (change)="onFileSelect($event)" [accept]="allowedFileTypes.join(',')"
-                  multiple style="display: none;">
-                <div class="d-flex justify-content-end mt-2">
-                  <button type="button" class="btn btn-primary btn-sm" (click)="addDocument()"
-                    [disabled]="!selectedDocumentType">
-                    <i class="mdi mdi-plus me-1"></i>Add
-                  </button>
-                </div>
-              </div>
-            </div>
+          
 
-            <!-- File Type Support Info -->
-            <div class="row mb-3">
-              <div class="col-12">
-                <small class="text-muted">
-                  <strong>Supporting files</strong> - JPG, JPEG, PNG, PDF, DOC, DOCX, ZIP.<br>
-                  <strong>Maximum 10 files up to 2MB.</strong>
-                </small>
-              </div>
-            </div>
-
-            <!-- Upload Error -->
-            <div *ngIf="uploadError" class="alert alert-warning alert-dismissible fade show" role="alert">
-              <i class="mdi mdi-alert me-2"></i>{{ uploadError }}
-              <button type="button" class="btn-close" (click)="uploadError = ''" aria-label="Close"></button>
-            </div>
-
-            <!-- Documents Table -->
-            <div class="row" *ngIf="candidateDocuments.length > 0">
-              <div class="col-12">
-                <div class="table-responsive">
-                  <table class="table table-sm table-bordered">
-                    <thead class="table-light">
-                      <tr>
-                        <th>Document</th>
-                        <th>Document Type</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr *ngFor="let doc of candidateDocuments; trackBy: trackByDocumentId">
-                        <td>
-                          <div class="d-flex align-items-center">
-                            <i [class]="getFileIcon(doc.fileType)" class="me-2 text-primary"></i>
-                            <div>
-                              <div class="fw-bold">{{ doc.fileName }}</div>
-                              <small class="text-muted">{{ formatFileSize(doc.fileSize) }}</small>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <span class="badge bg-info">{{ getDocumentTypeName(doc.documentType) }}</span>
-                        </td>
-                        <td>
-                          <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeDocument(doc.id!)">
-                            <i class="mdi mdi-delete"></i>
-                          </button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            <!-- No Documents Message -->
-            <div class="row" *ngIf="candidateDocuments.length === 0">
-              <div class="col-12">
-                <div class="text-center py-4"
-                  style="background-color: #f8f9fa; border: 1px dashed #dee2e6; border-radius: 0.375rem;">
-                  <i class="mdi mdi-file-document-outline text-muted" style="font-size: 3rem;"></i>
-                  <p class="mb-0 text-muted">No data to display</p>
-                </div>
-              </div>
-            </div>
           </div>
 
           <div class="modal-footer">
@@ -729,5 +499,58 @@
   </div>
 
   <!-- Modal Backdrop -->
-  <div *ngIf="showCandidateModal || showDeleteModal" class="modal-backdrop fade show"></div>
+  <div *ngIf="showCandidateModal || showDeleteModal || showAssignCheckModal" class="modal-backdrop fade show"></div>
+
+
+  <div class="modal fade" [class.show]="showAssignCheckModal" [style.display]="showAssignCheckModal ? 'block' : 'none'"
+    tabindex="-1" aria-labelledby="assignCheckModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="assignCheckModalLabel">Assign Check</h5>
+          <button type="button" class="btn-close" (click)="closeAssignCheckModal()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Competency Dropdown -->
+          <div class="form-group">
+            <label for="competencyDropdown">Select Competency</label>
+            <select id="competencyDropdown" class="form-control" [(ngModel)]="selectedCompetency">
+              <option *ngFor="let competency of competencies" [value]="competency.competencyId">
+                {{ competency.competencyName }}
+              </option>
+            </select>
+          </div>
+          <!-- Add Button -->
+          <button type="button" class="btn btn-primary mt-3" (click)="addCompetencyToTable()">+</button>
+
+          <!-- Assigned Competencies Table -->
+          <table class="table mt-3">
+            <thead>
+              <tr>
+                <th>Competency Name</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of assignedCompetencies">
+                <td>{{ item.competencyName }}</td>
+                <td>
+                  <button class="btn btn-danger btn-sm" (click)="removeCompetency(item)">Remove</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-success" *ngIf="assignedCompetencies.length > 0" (click)="assignCompetencies()">Assign Competency</button>
+
+          <button type="button" class="btn btn-secondary" (click)="closeAssignCheckModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
 </div>

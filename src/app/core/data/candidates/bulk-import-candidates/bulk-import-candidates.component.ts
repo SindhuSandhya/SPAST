@@ -48,11 +48,31 @@ export class BulkImportCandidatesComponent {
     }
   }
 
+  downloadSampleExcel() {
+  const sampleUrl = `${environment.apiUrl}/candidates/sampleFile`; // Example API URL
+  const fileName = 'Sample_Candidates.xlsx';
+
+  this.http.get(sampleUrl, { responseType: 'blob' }).subscribe({
+    next: (blob) => {
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = fileName;
+      link.click();
+      window.URL.revokeObjectURL(link.href);
+    },
+    error: (err) => {
+      console.error('Error downloading sample Excel file:', err);
+      alert('Failed to download sample file.');
+    }
+  });
+}
+
   validateUploads() {
     this.importError = '';
     // Emit the excel file to parent for bulk import; emit null if none selected
     if (this.selectedExcelFile) {
       this.importSuccess.emit(this.selectedExcelFile);
+      
     } else {
       this.importSuccess.emit(null);
     }

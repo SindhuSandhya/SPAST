@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { BulkImportCandidatesComponent } from './bulk-import-candidates/bulk-import-candidates.component';
+import * as $ from 'jquery';
 
 interface ApiResponse {
   id: string | null;
@@ -21,19 +22,11 @@ interface Candidate {
   middleName?: string;
   lastName: string;
   fullName: string;
-  fatherName: string;
   dateOfBirth: string;
   gender: string;
-  mobile: string;
+  mobileNumber: string;
   emailId: string;
-  dateOfJoining?: string;
-  caseReceiveDate: string;
-  employeeId?: string;
-  location: string;
   uan?: string;
-  employmentType: string;
-  documentType: string;
-  documentUrl: string[];
   createdOn: string;
   updatedOn: string;
   active?: boolean;
@@ -76,6 +69,11 @@ interface DocumentType {
 })
 export class CandidatesComponent implements OnInit {
   candidates: Candidate[] = [];
+  showAssignCheckModal = false;
+  selectedCompetency: string | null = null;
+  assignedCompetencies: any[] = []; // Holds competencies that have been added
+  competencies: any[] = []; // List of available competencies
+  selectedCandidate: any = null; // Store selected candidate
   filteredCandidates: Candidate[] = [];
   locations: Location[] = [];
   documentTypes: DocumentType[] = [];
@@ -136,10 +134,21 @@ export class CandidatesComponent implements OnInit {
 
   ngOnInit(): void {
     console.log('Candidates Component initializing...');
-    this.loadLocations();
-    this.loadDocumentTypes();
+    // this.loadLocations();
+    // this.loadDocumentTypes();
     this.loadCandidates();
+    this.loadCompetencies();
     console.log('Initial form state:', this.candidateForm.value);
+  }
+
+  loadCompetencies() {
+    const tenantId = sessionStorage.getItem('tenantId');
+    const url = `${environment.apiUrl}/tenantLevelCompetencies/getAllCompetencies?tenantId=${tenantId}`;
+    this.http.get(url, {}).subscribe(response => {
+      if (response && response['data']) {
+        this.competencies = response['data'];
+      }
+    });
   }
 
   /**
@@ -204,27 +213,21 @@ export class CandidatesComponent implements OnInit {
     this.importError = '';
   }
 
+
+
   initializeCandidateForm() {
     this.candidateForm = this.formBuilder.group({
-      candidateId: [{ value: '', disabled: false }],
+      candidateId: [''],
       firstName: ['', Validators.required],
       middleName: [''],
       lastName: ['', Validators.required],
-      fatherName: ['', Validators.required],
       dateOfBirth: ['', Validators.required],
       gender: ['', Validators.required],
-      mobile: ['', [Validators.required, Validators.pattern(/^[6-9][0-9]{9}$/)]],
+      mobileNumber: ['', [Validators.required, Validators.pattern(/^[6-9][0-9]{9}$/)]],
       emailId: ['', [Validators.required, Validators.email]],
-      dateOfJoining: [''],
-      caseReceiveDate: ['', Validators.required],
-      employeeId: [''],
-      location: ['', Validators.required],
       uan: [''],
-      employmentType: ['', Validators.required],
-      active: [true],
-      createdBy: ['system'],
-      updatedBy: ['system']
     });
+
 
     // Set default case receive date to today
     const today = new Date().toISOString().split('T')[0];
@@ -264,33 +267,25 @@ export class CandidatesComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    const tenantId = 'O9HG0W'; // Replace with dynamic tenantId if necessary
+    const tenantId = sessionStorage.getItem('tenantId'); // Replace with dynamic tenantId if necessary
     this.http.get<ApiResponse>(`${environment.apiUrl}/candidates/getAll?tenantId=${tenantId}`).subscribe({
       next: (response) => {
         console.log('Candidates API Response:', response);
 
         if (response.status.statusCode === 303 && response.data) {
           if (Array.isArray(response.data)) {
-            this.candidates = response.data.map((candidate: any) => ({
+            this.candidates = response.data.map((candidate: Candidate) => ({
               candidateId: candidate.candidateId,
               tenantId: candidate.tenantId,
               firstName: candidate.firstName,
               middleName: candidate.middleName,
               lastName: candidate.lastName,
               fullName: candidate.fullName,
-              fatherName: candidate.fatherName,
               dateOfBirth: candidate.dateOfBirth,
               gender: candidate.gender,
-              mobile: candidate.mobileNumber,
+              mobileNumber: candidate.mobileNumber,
               emailId: candidate.emailId,
-              dateOfJoining: candidate.dateOfJoining,
-              caseReceiveDate: candidate.caseRecieveDate,
-              employeeId: candidate.employeeId,
-              location: candidate.location,
               uan: candidate.uan,
-              employmentType: candidate.employmentType,
-              documentType: candidate.documentType,
-              documentUrl: candidate.documentUrl,
               createdOn: candidate.createdOn,
               updatedOn: candidate.updatedOn
             }));
@@ -303,19 +298,11 @@ export class CandidatesComponent implements OnInit {
               middleName: candidate.middleName,
               lastName: candidate.lastName,
               fullName: candidate.fullName,
-              fatherName: candidate.fatherName,
               dateOfBirth: candidate.dateOfBirth,
               gender: candidate.gender,
-              mobile: candidate.mobileNumber,
+              mobileNumber: candidate.mobileNumber,
               emailId: candidate.emailId,
-              dateOfJoining: candidate.dateOfJoining,
-              caseReceiveDate: candidate.caseRecieveDate,
-              employeeId: candidate.employeeId,
-              location: candidate.location,
               uan: candidate.uan,
-              employmentType: candidate.employmentType,
-              documentType: candidate.documentType,
-              documentUrl: candidate.documentUrl,
               createdOn: candidate.createdOn,
               updatedOn: candidate.updatedOn
             }];
@@ -434,16 +421,65 @@ export class CandidatesComponent implements OnInit {
     this.candidateError = '';
   }
 
-  // Ensure locations are loaded before opening edit modal
-  openEditModalWithLocations(candidate: Candidate) {
-    if (this.locations.length === 0) {
-      console.log('Locations not loaded yet, loading now...');
-      this.loadLocations();
-      setTimeout(() => {
-        this.openEditModal(candidate);
-      }, 500);
-    } else {
-      this.openEditModal(candidate);
+
+  openAssignCheckModal(candidate: any) {
+    this.assignedCompetencies = [];
+    // this.competencies = [];
+
+    this.selectedCandidate = candidate;
+    this.showAssignCheckModal = true; // Open the modal
+  }
+
+  closeAssignCheckModal() {
+    this.showAssignCheckModal = false; // Close the modal
+  }
+
+  addCompetencyToTable() {
+    if (this.selectedCompetency) {
+      const competency = this.competencies.find(c => c.competencyId === this.selectedCompetency);
+      if (competency && !this.assignedCompetencies.includes(competency)) {
+        this.assignedCompetencies.push(competency); // Add competency to table
+        this.selectedCompetency = null; // Reset selection
+      }
+    }
+  }
+
+  assignCompetencies() {
+    // Prepare payload for API
+    const competenciesPayload = this.assignedCompetencies.map((competency) => ({
+      competencyName: competency.competencyName,
+      competencyId: competency.competencyId.toString(), // Ensure competencyId is a string
+      isVerified: false, // Set the verification status as needed
+    }));
+
+    const requestData = {
+      tenantId: sessionStorage.getItem('tenantId'),  // Replace with actual tenant ID
+      candidateId: this.selectedCandidate?.candidateId,  // Replace with actual candidate ID
+      competencies: competenciesPayload,
+    };
+
+    // Make the API call
+    this.http
+      .post(`${environment.apiUrl}/candidates/saveCompetencyCheck`, requestData, {
+        headers: { 'Content-Type': 'application/json' },
+      })
+      .subscribe(
+        (response) => {
+          console.log('Competencies assigned successfully:', response);
+          // Close the modal after successful API call
+          this.showSuccessToast(`Competencies assigned successfully to the candidate ${this.selectedCandidate?.firstName} ${this.selectedCandidate?.lastName}.`);
+          this.closeAssignCheckModal();
+        },
+        (error) => {
+          console.error('Error assigning competencies:', error);
+        }
+      );
+  }
+
+  removeCompetency(competency: any) {
+    const index = this.assignedCompetencies.indexOf(competency);
+    if (index > -1) {
+      this.assignedCompetencies.splice(index, 1); // Remove competency
     }
   }
 
@@ -458,34 +494,25 @@ export class CandidatesComponent implements OnInit {
     const displayCandidateId = candidate.candidateId || candidate.id || '';
 
     console.log('Display Candidate ID:', displayCandidateId);
-    console.log('Location from candidate:', candidate.location);
 
     this.candidateError = '';
 
     // Convert dates for form inputs
     const dobFormatted = candidate.dateOfBirth ? this.formatDateForInput(candidate.dateOfBirth) : '';
-    const dojFormatted = candidate.dateOfJoining ? this.formatDateForInput(candidate.dateOfJoining) : '';
-    const caseReceiveDateFormatted = candidate.caseReceiveDate ? this.formatDateForInput(candidate.caseReceiveDate) : '';
 
     this.candidateForm.setValue({
       candidateId: displayCandidateId,
       firstName: candidate.firstName || '',
       middleName: candidate.middleName || '',
       lastName: candidate.lastName || '',
-      fatherName: candidate.fatherName || '',
       dateOfBirth: dobFormatted,
       gender: candidate.gender || '',
-      mobile: candidate.mobile || '',
+      mobileNumber: candidate.mobileNumber || '',
       emailId: candidate.emailId || '',
-      dateOfJoining: dojFormatted,
-      caseReceiveDate: caseReceiveDateFormatted,
-      employeeId: candidate.employeeId || '',
-      location: candidate.location || '',
       uan: candidate.uan || '',
-      employmentType: candidate.employmentType || '',
-      active: candidate.active !== undefined ? candidate.active : true,
-      createdBy: candidate.createdBy || 'system',
-      updatedBy: 'system'
+      // active: candidate.active !== undefined ? candidate.active : true,
+      // createdBy: candidate.createdBy || 'system',
+      // updatedBy: 'system'
     });
 
     console.log('Form values after setValue:', this.candidateForm.value);
@@ -523,8 +550,8 @@ export class CandidatesComponent implements OnInit {
         return 'Please enter a valid email address';
       }
       if (field.errors['pattern']) {
-        if (fieldName === 'mobile') {
-          return 'Please enter a valid 10-digit mobile number';
+        if (fieldName === 'mobileNumber') {
+          return 'Please enter a valid 10-digit mobileNumber number';
         }
       }
     }
@@ -539,14 +566,13 @@ export class CandidatesComponent implements OnInit {
       'fatherName': 'Father\'s Name',
       'dateOfBirth': 'Date of Birth',
       'gender': 'Gender',
-      'mobile': 'Mobile Number',
+      'mobileNumber': 'Mobile Number',
       'emailId': 'Email ID',
       'dateOfJoining': 'Date of Joining',
       'caseReceiveDate': 'Case Receive Date',
       'employeeId': 'Employee ID',
       'location': 'Location',
       'uan': 'UAN',
-      'employmentType': 'Employment Type'
     };
     return displayNames[fieldName] || fieldName;
   }
@@ -645,18 +671,27 @@ export class CandidatesComponent implements OnInit {
 
 
   onSubmit() {
-    if (this.candidateForm.invalid) {
-      Object.keys(this.candidateForm.controls).forEach(key => {
-        this.candidateForm.get(key)?.markAsTouched();
-      });
-      this.candidateError = 'Please fix the errors in the form before submitting.';
-      return;
-    }
+    // if (this.candidateForm.invalid) {
+    //   Object.keys(this.candidateForm.controls).forEach(key => {
+    //     this.candidateForm.get(key)?.markAsTouched();
+    //   });
+    //   this.candidateError = 'Please fix the errors in the form before submitting.';
+    //   return;
+    // }
 
     this.candidateLoading = true;
     this.candidateError = '';
 
-    const payload = this.candidateForm.value;
+    // Prepare payload with only filled values
+    const formValues = this.candidateForm.value;
+    const payload: any = {};
+
+    Object.keys(formValues).forEach(key => {
+      const value = formValues[key];
+      if (value !== null && value !== undefined && value !== '') {
+        payload[key] = value;
+      }
+    });
 
     if (this.isEditMode) {
       this.updateCandidate(payload);
@@ -665,9 +700,8 @@ export class CandidatesComponent implements OnInit {
     }
   }
 
-
   createCandidate(payload: any) {
-    const tenantId = 'O9HG0W'; // Replace with dynamic tenantId if necessary
+    const tenantId = sessionStorage.getItem('tenantId'); // Replace with dynamic tenantId if necessary
     this.http.post<ApiResponse>(`${environment.apiUrl}/candidates/create`, {
       tenantId,
       ...payload
@@ -688,7 +722,7 @@ export class CandidatesComponent implements OnInit {
 
 
   updateCandidate(payload: any) {
-    const tenantId = 'O9HG0W'; // Replace with dynamic tenantId if necessary
+    const tenantId = sessionStorage.getItem('tenantId'); // Replace with dynamic tenantId if necessary
     this.http.put<ApiResponse>(`${environment.apiUrl}/candidates/update`, {
       tenantId,
       candidateId: payload.candidateId,

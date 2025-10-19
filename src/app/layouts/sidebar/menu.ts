@@ -15,13 +15,6 @@ export const MENU: MenuItem[] = [
 
     },
     {
-        id: 3,
-        label: 'Users',
-        icon: 'bx bx-user-plus',
-        link: '/users',
-
-    },
-    {
         id: 4,
         label: 'Candidates',
         icon: 'bx bx-street-view',
@@ -36,8 +29,15 @@ export const MENU: MenuItem[] = [
         subItems: [
             {
                 id: 1,
-                label: 'Competency List',
+                label: 'Competencies',
                 link: '/configuration/competency-list'
+            },
+            {
+                id: 3,
+                label: 'Users',
+                icon: 'bx bx-user-plus',
+                link: '/users',
+
             }
         ]
     }

@@ -16,7 +16,7 @@
   display: none;
 }
 
-.upload-input + button {
+.upload-input+button {
   display: block;
   margin-top: 10px;
   width: 100%;
@@ -25,4 +25,21 @@
 .container {
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.upload-box-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  /* Semi-transparent background */
+  z-index: 1040;
+}
+
+.download-sample-button {
+  position: absolute;
+  right: 0;
+  top: 0;
 }

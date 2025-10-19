@@ -1,11 +1,7 @@
 <div class="card shadow-sm">
   <div class="card-header d-flex justify-content-between align-items-center">
     <h5 class="mb-0">Competencies</h5>
-    <button
-      class="btn btn-sm btn-success"
-      [disabled]="saving || !competencies.length"
-      (click)="openSaveModal()"
-    >
+    <button class="btn btn-sm btn-success" [disabled]="saving || !competencies.length" (click)="openSaveModal()">
       <i class="bx bx-save"></i> {{ saving ? 'Saving...' : 'Save' }}
     </button>
   </div>
@@ -16,28 +12,26 @@
         <tr>
           <th style="width: 10%">Active</th>
           <th>Competency Name</th>
-          <th style="width: 15%">Action</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let c of competencies; let i = index">
           <td class="text-center">
-            <!-- ✅ Removed (change)="toggleStatus()" -->
-            <input
-              type="checkbox"
-              class="form-check-input"
-              [(ngModel)]="c.isActive"
-            />
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="toggleButton"  [(ngModel)]="c.isActive"
+                role="switch" />
+            </div>
           </td>
+
           <td>{{ c.competencyName }}</td>
-          <td>
+          <!-- <td>
             <button
               class="btn btn-sm btn-outline-danger"
               (click)="openDeleteModal(c)"
             >
               <i class="bx bx-trash"></i>
             </button>
-          </td>
+          </td> -->
         </tr>
 
         <tr *ngIf="!competencies.length && !loading">
