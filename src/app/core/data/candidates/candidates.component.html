@@ -67,6 +67,7 @@
             <table class="table table-bordered dt-responsive nowrap datatables no-footer dtr-inline">
               <thead class="table-light">
                 <tr>
+                  <th>Candidate Id</th>
                   <th>Full Name</th>
                   <th>Email</th>
                   <th>Mobile</th>
@@ -78,9 +79,13 @@
               </thead>
               <tbody>
                 <tr *ngFor="let candidate of paginatedCandidates; trackBy: trackByCandidateId">
-                  <td>
-                    <strong>{{ candidate.fullName ? candidate.fullName : candidate.firstName + ' ' + candidate.lastName
-                      }}</strong>
+                  <td >
+                    <a style="cursor: pointer;text-decoration: underline;" (click)="onClickCandidateDetails(candidate)" class="text-primary">
+                      {{ candidate.candidateId }}
+                    </a>
+                  </td>
+                  <td  class="fw-bold">
+                      {{ candidate.fullName ? candidate.fullName : candidate.firstName + ' ' + candidate.lastName }}
                     <div class="text-muted small">{{ candidate.fatherName }}</div>
                   </td>
                   <td>
@@ -98,8 +103,8 @@
                       {{ formatGender(candidate.gender) }}
                     </span>
                   </td>
-                 
-                
+
+
                   <!-- <td>
                     <small>{{ formatDate(candidate.caseReceiveDate) }}</small>
                     <div class="text-muted" style="font-size: 0.75rem;">
@@ -122,8 +127,7 @@
                         <i class="mdi mdi-dots-vertical"></i>
                       </button>
                       <div class="dropdown-menu dropdown-menu-end">
-                        <a class="dropdown-item" href="javascript:void(0);"
-                          (click)="openEditModal(candidate)">
+                        <a class="dropdown-item" href="javascript:void(0);" (click)="openEditModal(candidate)">
                           <i class="mdi mdi-pencil me-2"></i>Edit
                         </a>
 
@@ -285,7 +289,7 @@
         <form [formGroup]="candidateForm" (ngSubmit)="onSubmit()" novalidate>
           <div class="modal-body">
 
-  
+
 
             <!-- Error Alert -->
             <div *ngIf="candidateError" class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -440,9 +444,9 @@
 
 
 
-          
 
-          
+
+
 
           </div>
 
@@ -543,7 +547,8 @@
         </div>
 
         <div class="modal-footer">
-          <button class="btn btn-success" *ngIf="assignedCompetencies.length > 0" (click)="assignCompetencies()">Assign Competency</button>
+          <button class="btn btn-success" *ngIf="assignedCompetencies.length > 0" (click)="assignCompetencies()">Assign
+            Competency</button>
 
           <button type="button" class="btn btn-secondary" (click)="closeAssignCheckModal()">Close</button>
         </div>

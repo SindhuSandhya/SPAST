@@ -7,6 +7,7 @@ import { DashboardComponent } from './core/data/dashboard/dashboard.component';
 import { AuthGuard } from './core/guards/auth.guard';
 import { RoleGuard } from './core/guards/auth.guard';
 import { CompetencyListComponent } from './core/data/competency-list/competency-list.component';
+import { CandidateDetailsComponent } from './core/data/candidates/candidate-details/candidate-details.component';
 
 export const routes: Routes = [
     {
@@ -41,6 +42,9 @@ export const routes: Routes = [
                 canActivate: [AuthGuard, RoleGuard],
                 data: { role: 'TenantUser' }
             },
+
+            { path: 'candidate-details/:candidateId', component: CandidateDetailsComponent },
+
             {
                 path: 'configuration',
                 canActivate: [AuthGuard, RoleGuard],

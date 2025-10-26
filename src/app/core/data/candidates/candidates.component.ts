@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { BulkImportCandidatesComponent } from './bulk-import-candidates/bulk-import-candidates.component';
 import * as $ from 'jquery';
+import { Router } from '@angular/router';
 
 interface ApiResponse {
   id: string | null;
@@ -127,7 +128,8 @@ export class CandidatesComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
-    private formBuilder: FormBuilder
+    private formBuilder: FormBuilder,
+    private router: Router
   ) {
     this.initializeCandidateForm();
   }
@@ -895,6 +897,12 @@ export class CandidatesComponent implements OnInit {
     event.preventDefault();
     event.stopPropagation();
     this.dragOver = false;
+  }
+
+  onClickCandidateDetails(candidate: Candidate) {
+    // Implement the logic to handle candidate details click
+    console.log('Candidate details clicked:', candidate);
+    this.router.navigate(['/candidate-details', candidate.candidateId || candidate.id]);
   }
 
   onDrop(event: DragEvent) {

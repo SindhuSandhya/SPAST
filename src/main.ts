@@ -21,6 +21,8 @@ import { FakeBackendInterceptor } from './app/core/helpers/fake-backend';
 import { HTTP_INTERCEPTORS, provideHttpClient } from '@angular/common/http';
 import { JwtInterceptor } from './app/core/helpers/jwt.interceptor';
 import { ErrorInterceptor } from './app/core/helpers/error.interceptor';
+import { routes } from './app/app.routes';
+import { provideRouter } from '@angular/router';
 // Enable production mode if in production environment
 if (environment.production) {
   enableProdMode();
@@ -34,6 +36,7 @@ if (environment.defaultauth === 'firebase') {
 
 bootstrapApplication(AppComponent, {
   providers: [
+    provideRouter(routes),
     provideHttpClient(),
     { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
