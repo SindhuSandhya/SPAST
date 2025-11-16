@@ -1,130 +1,270 @@
 <div class="container-fluid">
-  <!-- Page Header -->
-  <div class="row">
-    <div class="col-12">
-      <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-        <h4 class="mb-sm-0 font-size-18">Background Verification Dashboard</h4>
-        <div class="page-title-right">
-          <button type="button" class="btn btn-light me-2" (click)="refreshData()">
-            <i class="mdi mdi-refresh"></i> Refresh
-          </button>
-          <button type="button" class="btn btn-primary" (click)="exportReport()">
-            <i class="mdi mdi-export"></i> Export Report
-          </button>
-        </div>
-      </div>
+  <!-- Loading Overlay -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
     </div>
   </div>
 
+  <!-- Debug Info (Remove in production) -->
+  <div class="alert alert-info" style="display: none;">
+    <strong>Debug Info:</strong>
+    <pre>{{ dashboardStats | json }}</pre>
+  </div>
+
+  <!-- Page Header -->
+
+
   <!-- Statistics Cards -->
   <div class="row">
-    <div class="col-xl-2 col-md-6">
-      <div class="card mini-stats-wid">
-        <div class="card-body">
-          <div class="d-flex">
-            <div class="flex-grow-1">
-              <p class="text-muted fw-medium">Total Candidates</p>
-              <h4 class="mb-0">{{ dashboardStats.totalCandidates }}</h4>
-            </div>
-            <div class="flex-shrink-0 align-self-center">
-              <div class="avatar-sm rounded-circle bg-primary mini-stat-icon">
-                <span class="avatar-title">
-                  <i class="mdi mdi-account-multiple font-size-20"></i>
-                </span>
+    <!-- Admin View Stats -->
+    <ng-container *ngIf="adminDashboardStats.totalTenants > 0">
+      <div class="col-xl-4 col-md-6">
+        <div class="card mini-stats-wid">
+          <div class="card-body">
+            <div class="d-flex">
+              <div class="flex-grow-1">
+                <p class="text-muted fw-medium">Total Tenants</p>
+                <h4 class="mb-0">{{ adminDashboardStats.totalTenants }}</h4>
+              </div>
+              <div class="flex-shrink-0 align-self-center">
+                <div class="avatar-sm rounded-circle bg-primary mini-stat-icon">
+                  <span class="avatar-title">
+                    <i class="mdi mdi-building font-size-20"></i>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="col-xl-2 col-md-6">
-      <div class="card mini-stats-wid">
-        <div class="card-body">
-          <div class="d-flex">
-            <div class="flex-grow-1">
-              <p class="text-muted fw-medium">Completed</p>
-              <h4 class="mb-0">{{ dashboardStats.completed }}</h4>
-              <p class="text-muted mb-0">{{ dashboardStats.completionPercentage }}%</p>
-            </div>
-            <div class="flex-shrink-0 align-self-center">
-              <div class="avatar-sm rounded-circle bg-success mini-stat-icon">
-                <span class="avatar-title">
-                  <i class="mdi mdi-check-circle font-size-20"></i>
-                </span>
+  <div class="col-xl-4 col-md-6">
+        <div class="card mini-stats-wid">
+          <div class="card-body">
+            <div class="d-flex">
+              <div class="flex-grow-1">
+                <p class="text-muted fw-medium">Total Cases</p>
+                <h4 class="mb-0">{{ adminDashboardStats.totalCases }}</h4>
+              </div>
+              <div class="flex-shrink-0 align-self-center">
+                <div class="avatar-sm rounded-circle bg-success mini-stat-icon">
+                  <span class="avatar-title">
+                    <i class="mdi mdi-briefcase font-size-20"></i>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="col-xl-2 col-md-6">
-      <div class="card mini-stats-wid">
-        <div class="card-body">
-          <div class="d-flex">
-            <div class="flex-grow-1">
-              <p class="text-muted fw-medium">Pending</p>
-              <h4 class="mb-0">{{ dashboardStats.pending }}</h4>
-              <p class="text-muted mb-0">{{ dashboardStats.pendingPercentage }}%</p>
-            </div>
-            <div class="flex-shrink-0 align-self-center">
-              <div class="avatar-sm rounded-circle bg-warning mini-stat-icon">
-                <span class="avatar-title">
-                  <i class="mdi mdi-clock-outline font-size-20"></i>
-                </span>
+  <div class="col-xl-4 col-md-6">
+        <div class="card mini-stats-wid">
+          <div class="card-body">
+            <div class="d-flex">
+              <div class="flex-grow-1">
+                <p class="text-muted fw-medium">Active Tenants</p>
+                <h4 class="mb-0">{{ adminDashboardStats.activeTenants }}</h4>
+                <!-- <p class="text-muted mb-0">{{ ((adminDashboardStats.activeTenants / adminDashboardStats.totalTenants) * 100) | number:'1.0-0' }}%</p> -->
+              </div>
+              <div class="flex-shrink-0 align-self-center">
+                <div class="avatar-sm rounded-circle bg-warning mini-stat-icon">
+                  <span class="avatar-title">
+                    <i class="mdi mdi-check-circle font-size-20"></i>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="col-xl-2 col-md-6">
-      <div class="card mini-stats-wid">
-        <div class="card-body">
-          <div class="d-flex">
-            <div class="flex-grow-1">
-              <p class="text-muted fw-medium">Failed</p>
-              <h4 class="mb-0">{{ dashboardStats.failed }}</h4>
-              <p class="text-muted mb-0">{{ dashboardStats.failedPercentage }}%</p>
-            </div>
-            <div class="flex-shrink-0 align-self-center">
-              <div class="avatar-sm rounded-circle bg-danger mini-stat-icon">
-                <span class="avatar-title">
-                  <i class="mdi mdi-close-circle font-size-20"></i>
-                </span>
+  <div class="col-xl-4 col-md-6">
+        <div class="card mini-stats-wid">
+          <div class="card-body">
+            <div class="d-flex">
+              <div class="flex-grow-1">
+                <p class="text-muted fw-medium">Avg. Cases/Tenant</p>
+                <h4 class="mb-0">{{ adminDashboardStats.averageCasesPerTenant }}</h4>
+              </div>
+              <div class="flex-shrink-0 align-self-center">
+                <div class="avatar-sm rounded-circle bg-info mini-stat-icon">
+                  <span class="avatar-title">
+                    <i class="mdi mdi-chart-line font-size-20"></i>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="col-xl-4 col-md-6">
-      <div class="card mini-stats-wid">
-        <div class="card-body">
-          <div class="d-flex">
-            <div class="flex-grow-1">
-              <p class="text-muted fw-medium">Avg. Days</p>
-              <h4 class="mb-0">{{ dashboardStats.avgDays }}</h4>
-              <p class="text-muted mb-0">Completion Time</p>
-            </div>
-            <div class="flex-shrink-0 align-self-center">
-              <div class="avatar-sm rounded-circle bg-info mini-stat-icon">
-                <span class="avatar-title">
-                  <i class="mdi mdi-timer-sand font-size-20"></i>
-                </span>
+  <div class="col-xl-4 col-md-6">
+        <div class="card mini-stats-wid">
+          <div class="card-body">
+            <div class="d-flex">
+              <div class="flex-grow-1">
+                <p class="text-muted fw-medium">Max Cases</p>
+                <h4 class="mb-0">{{ adminDashboardStats.maxCases }}</h4>
+              </div>
+              <div class="flex-shrink-0 align-self-center">
+                <div class="avatar-sm rounded-circle bg-danger mini-stat-icon">
+                  <span class="avatar-title">
+                    <i class="mdi mdi-trending-up font-size-20"></i>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+  <div class="col-xl-4 col-md-6">
+        <div class="card mini-stats-wid">
+          <div class="card-body">
+            <div class="d-flex">
+              <div class="flex-grow-1">
+                <p class="text-muted fw-medium">Min Cases</p>
+                <h4 class="mb-0">{{ adminDashboardStats.minCases }}</h4>
+              </div>
+              <div class="flex-shrink-0 align-self-center">
+                <div class="avatar-sm rounded-circle bg-secondary mini-stat-icon">
+                  <span class="avatar-title">
+                    <i class="mdi mdi-trending-down font-size-20"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Regular User View Stats (fallback) -->
+    <ng-container *ngIf="adminDashboardStats.totalTenants === 0">
+      <div class="col-xl-2 col-md-6">
+        <div class="card mini-stats-wid">
+          <div class="card-body">
+            <div class="d-flex">
+              <div class="flex-grow-1">
+                <p class="text-muted fw-medium">Total Candidates</p>
+                <h4 class="mb-0">{{ dashboardStats.totalCandidates }}</h4>
+              </div>
+              <div class="flex-shrink-0 align-self-center">
+                <div class="avatar-sm rounded-circle bg-primary mini-stat-icon">
+                  <span class="avatar-title">
+                    <i class="mdi mdi-account-multiple font-size-20"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-2 col-md-6">
+        <div class="card mini-stats-wid">
+          <div class="card-body">
+            <div class="d-flex">
+              <div class="flex-grow-1">
+                <p class="text-muted fw-medium">Completed</p>
+                <h4 class="mb-0">{{ dashboardStats.completed }}</h4>
+                <p class="text-muted mb-0">{{ dashboardStats.completionPercentage }}%</p>
+              </div>
+              <div class="flex-shrink-0 align-self-center">
+                <div class="avatar-sm rounded-circle bg-success mini-stat-icon">
+                  <span class="avatar-title">
+                    <i class="mdi mdi-check-circle font-size-20"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-2 col-md-6">
+        <div class="card mini-stats-wid">
+          <div class="card-body">
+            <div class="d-flex">
+              <div class="flex-grow-1">
+                <p class="text-muted fw-medium">Pending</p>
+                <h4 class="mb-0">{{ dashboardStats.pending }}</h4>
+                <p class="text-muted mb-0">{{ dashboardStats.pendingPercentage }}%</p>
+              </div>
+              <div class="flex-shrink-0 align-self-center">
+                <div class="avatar-sm rounded-circle bg-warning mini-stat-icon">
+                  <span class="avatar-title">
+                    <i class="mdi mdi-clock-outline font-size-20"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-2 col-md-6">
+        <div class="card mini-stats-wid">
+          <div class="card-body">
+            <div class="d-flex">
+              <div class="flex-grow-1">
+                <p class="text-muted fw-medium">Failed</p>
+                <h4 class="mb-0">{{ dashboardStats.failed }}</h4>
+                <p class="text-muted mb-0">{{ dashboardStats.failedPercentage }}%</p>
+              </div>
+              <div class="flex-shrink-0 align-self-center">
+                <div class="avatar-sm rounded-circle bg-danger mini-stat-icon">
+                  <span class="avatar-title">
+                    <i class="mdi mdi-close-circle font-size-20"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-4 col-md-6">
+        <div class="card mini-stats-wid">
+          <div class="card-body">
+            <div class="d-flex">
+              <div class="flex-grow-1">
+                <p class="text-muted fw-medium">Avg. Days</p>
+                <h4 class="mb-0">{{ dashboardStats.avgDays }}</h4>
+                <p class="text-muted mb-0">Completion Time</p>
+              </div>
+              <div class="flex-shrink-0 align-self-center">
+                <div class="avatar-sm rounded-circle bg-info mini-stat-icon">
+                  <span class="avatar-title">
+                    <i class="mdi mdi-timer-sand font-size-20"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Admin Tenant Bar Chart Section -->
+  <div class="row" *ngIf="adminDashboardStats.totalTenants > 0">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title mb-0">Tenant Cases Breakdown</h4>
+        </div>
+        <div class="card-body">
+          <div id="tenantChartDiv" style="width: 100%; height: 500px;"></div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Verification Type Statistics -->
-  <div class="row">
+  <div class="row" *ngIf="adminDashboardStats.totalTenants === 0">
     <div class="col-12">
       <div class="card">
         <div class="card-header">
@@ -132,208 +272,41 @@
         </div>
         <div class="card-body">
           <div class="row">
-            <!-- PAN Verification -->
-            <div class="col-xl-3 col-md-6">
+            <div class="col-xl-3 col-md-6" *ngFor="let key of getVerificationKeys()">
               <div class="card border-0 shadow-none">
                 <div class="card-body p-3">
                   <div class="d-flex align-items-center mb-3">
-                    <div class="avatar-sm rounded bg-soft-primary flex-shrink-0 me-3">
-                      <i class="mdi mdi-card-account-details font-size-20 text-primary"></i>
+                    <div class="avatar-sm rounded bg-soft-{{ getVerificationColorClass(key) }} flex-shrink-0 me-3">
+                      <i class="mdi {{ getVerificationIcon(key) }} font-size-20 text-{{ getVerificationColorClass(key) }}"></i>
                     </div>
-                    <h6 class="mb-0">PAN Verification</h6>
+                    <h6 class="mb-0">{{ getVerificationDisplayName(key) }}</h6>
                   </div>
                   
                   <div class="d-flex align-items-center justify-content-between mb-2">
                     <span class="text-muted">Completed</span>
-                    <span class="fw-medium text-success">{{ verificationTypeStats.pan.completed }}</span>
+                    <span class="fw-medium text-success">{{ verificationTypeStats[key]?.completed || 0 }}</span>
                   </div>
                   <div class="progress progress-sm mb-2">
                     <div class="progress-bar bg-success" role="progressbar" 
-                         [style.width.%]="(verificationTypeStats.pan.completed / dashboardStats.totalCandidates) * 100"></div>
+                         [style.width.%]="dashboardStats.totalCandidates > 0 ? (verificationTypeStats[key]?.completed / dashboardStats.totalCandidates) * 100 : 0"></div>
                   </div>
                   
                   <div class="d-flex align-items-center justify-content-between mb-2">
                     <span class="text-muted">Pending</span>
-                    <span class="fw-medium text-warning">{{ verificationTypeStats.pan.pending }}</span>
+                    <span class="fw-medium text-warning">{{ verificationTypeStats[key]?.pending || 0 }}</span>
                   </div>
                   <div class="progress progress-sm mb-2">
                     <div class="progress-bar bg-warning" role="progressbar" 
-                         [style.width.%]="(verificationTypeStats.pan.pending / dashboardStats.totalCandidates) * 100"></div>
+                         [style.width.%]="dashboardStats.totalCandidates > 0 ? (verificationTypeStats[key]?.pending / dashboardStats.totalCandidates) * 100 : 0"></div>
                   </div>
                   
                   <div class="d-flex align-items-center justify-content-between mb-2">
                     <span class="text-muted">Failed</span>
-                    <span class="fw-medium text-danger">{{ verificationTypeStats.pan.failed }}</span>
+                    <span class="fw-medium text-danger">{{ verificationTypeStats[key]?.failed || 0 }}</span>
                   </div>
                   <div class="progress progress-sm">
                     <div class="progress-bar bg-danger" role="progressbar" 
-                         [style.width.%]="(verificationTypeStats.pan.failed / dashboardStats.totalCandidates) * 100"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Aadhar Verification -->
-            <div class="col-xl-3 col-md-6">
-              <div class="card border-0 shadow-none">
-                <div class="card-body p-3">
-                  <div class="d-flex align-items-center mb-3">
-                    <div class="avatar-sm rounded bg-soft-info flex-shrink-0 me-3">
-                      <i class="mdi mdi-card-account-details-outline font-size-20 text-info"></i>
-                    </div>
-                    <h6 class="mb-0">Aadhar Verification</h6>
-                  </div>
-                  
-                  <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-muted">Completed</span>
-                    <span class="fw-medium text-success">{{ verificationTypeStats.aadhar.completed }}</span>
-                  </div>
-                  <div class="progress progress-sm mb-2">
-                    <div class="progress-bar bg-success" role="progressbar" 
-                         [style.width.%]="(verificationTypeStats.aadhar.completed / dashboardStats.totalCandidates) * 100"></div>
-                  </div>
-                  
-                  <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-muted">Pending</span>
-                    <span class="fw-medium text-warning">{{ verificationTypeStats.aadhar.pending }}</span>
-                  </div>
-                  <div class="progress progress-sm mb-2">
-                    <div class="progress-bar bg-warning" role="progressbar" 
-                         [style.width.%]="(verificationTypeStats.aadhar.pending / dashboardStats.totalCandidates) * 100"></div>
-                  </div>
-                  
-                  <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-muted">Failed</span>
-                    <span class="fw-medium text-danger">{{ verificationTypeStats.aadhar.failed }}</span>
-                  </div>
-                  <div class="progress progress-sm">
-                    <div class="progress-bar bg-danger" role="progressbar" 
-                         [style.width.%]="(verificationTypeStats.aadhar.failed / dashboardStats.totalCandidates) * 100"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Mobile Verification -->
-            <div class="col-xl-3 col-md-6">
-              <div class="card border-0 shadow-none">
-                <div class="card-body p-3">
-                  <div class="d-flex align-items-center mb-3">
-                    <div class="avatar-sm rounded bg-soft-warning flex-shrink-0 me-3">
-                      <i class="mdi mdi-cellphone font-size-20 text-warning"></i>
-                    </div>
-                    <h6 class="mb-0">Mobile Verification</h6>
-                  </div>
-                  
-                  <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-muted">Completed</span>
-                    <span class="fw-medium text-success">{{ verificationTypeStats.mobile.completed }}</span>
-                  </div>
-                  <div class="progress progress-sm mb-2">
-                    <div class="progress-bar bg-success" role="progressbar" 
-                         [style.width.%]="(verificationTypeStats.mobile.completed / dashboardStats.totalCandidates) * 100"></div>
-                  </div>
-                  
-                  <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-muted">Pending</span>
-                    <span class="fw-medium text-warning">{{ verificationTypeStats.mobile.pending }}</span>
-                  </div>
-                  <div class="progress progress-sm mb-2">
-                    <div class="progress-bar bg-warning" role="progressbar" 
-                         [style.width.%]="(verificationTypeStats.mobile.pending / dashboardStats.totalCandidates) * 100"></div>
-                  </div>
-                  
-                  <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-muted">Failed</span>
-                    <span class="fw-medium text-danger">{{ verificationTypeStats.mobile.failed }}</span>
-                  </div>
-                  <div class="progress progress-sm">
-                    <div class="progress-bar bg-danger" role="progressbar" 
-                         [style.width.%]="(verificationTypeStats.mobile.failed / dashboardStats.totalCandidates) * 100"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- UAN Verification -->
-            <div class="col-xl-3 col-md-6">
-              <div class="card border-0 shadow-none">
-                <div class="card-body p-3">
-                  <div class="d-flex align-items-center mb-3">
-                    <div class="avatar-sm rounded bg-soft-secondary flex-shrink-0 me-3">
-                      <i class="mdi mdi-bank font-size-20 text-secondary"></i>
-                    </div>
-                    <h6 class="mb-0">UAN Verification</h6>
-                  </div>
-                  
-                  <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-muted">Completed</span>
-                    <span class="fw-medium text-success">{{ verificationTypeStats.uan.completed }}</span>
-                  </div>
-                  <div class="progress progress-sm mb-2">
-                    <div class="progress-bar bg-success" role="progressbar" 
-                         [style.width.%]="(verificationTypeStats.uan.completed / dashboardStats.totalCandidates) * 100"></div>
-                  </div>
-                  
-                  <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-muted">Pending</span>
-                    <span class="fw-medium text-warning">{{ verificationTypeStats.uan.pending }}</span>
-                  </div>
-                  <div class="progress progress-sm mb-2">
-                    <div class="progress-bar bg-warning" role="progressbar" 
-                         [style.width.%]="(verificationTypeStats.uan.pending / dashboardStats.totalCandidates) * 100"></div>
-                  </div>
-                  
-                  <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-muted">Failed</span>
-                    <span class="fw-medium text-danger">{{ verificationTypeStats.uan.failed }}</span>
-                  </div>
-                  <div class="progress progress-sm">
-                    <div class="progress-bar bg-danger" role="progressbar" 
-                         [style.width.%]="(verificationTypeStats.uan.failed / dashboardStats.totalCandidates) * 100"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Face Recognition -->
-          <div class="row">
-            <div class="col-xl-3 col-md-6">
-              <div class="card border-0 shadow-none">
-                <div class="card-body p-3">
-                  <div class="d-flex align-items-center mb-3">
-                    <div class="avatar-sm rounded bg-soft-dark flex-shrink-0 me-3">
-                      <i class="mdi mdi-face-recognition font-size-20 text-dark"></i>
-                    </div>
-                    <h6 class="mb-0">Face Recognition</h6>
-                  </div>
-                  
-                  <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-muted">Completed</span>
-                    <span class="fw-medium text-success">{{ verificationTypeStats.faceRecognition.completed }}</span>
-                  </div>
-                  <div class="progress progress-sm mb-2">
-                    <div class="progress-bar bg-success" role="progressbar" 
-                         [style.width.%]="(verificationTypeStats.faceRecognition.completed / dashboardStats.totalCandidates) * 100"></div>
-                  </div>
-                  
-                  <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-muted">Pending</span>
-                    <span class="fw-medium text-warning">{{ verificationTypeStats.faceRecognition.pending }}</span>
-                  </div>
-                  <div class="progress progress-sm mb-2">
-                    <div class="progress-bar bg-warning" role="progressbar" 
-                         [style.width.%]="(verificationTypeStats.faceRecognition.pending / dashboardStats.totalCandidates) * 100"></div>
-                  </div>
-                  
-                  <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-muted">Failed</span>
-                    <span class="fw-medium text-danger">{{ verificationTypeStats.faceRecognition.failed }}</span>
-                  </div>
-                  <div class="progress progress-sm">
-                    <div class="progress-bar bg-danger" role="progressbar" 
-                         [style.width.%]="(verificationTypeStats.faceRecognition.failed / dashboardStats.totalCandidates) * 100"></div>
+                         [style.width.%]="dashboardStats.totalCandidates > 0 ? (verificationTypeStats[key]?.failed / dashboardStats.totalCandidates) * 100 : 0"></div>
                   </div>
                 </div>
               </div>
@@ -345,7 +318,7 @@
   </div>
 
   <!-- Candidate Verification Status Table -->
-  <div class="row">
+  <!-- <div class="row">
     <div class="col-12">
       <div class="card">
         <div class="card-header">
@@ -375,11 +348,7 @@
                   <th>Case Date</th>
                   <th>Overall Status</th>
                   <th>Progress</th>
-                  <th>PAN</th>
-                  <th>Aadhar</th>
-                  <th>Mobile</th>
-                  <th>UAN</th>
-                  <th>Face Recognition</th>
+                  <th *ngFor="let key of getVerificationKeys()">{{ getVerificationDisplayName(key).split(' ')[0] }}</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -412,20 +381,8 @@
                     </div>
                     <small class="text-muted">{{ candidate.progress }}%</small>
                   </td>
-                  <td>
-                    <i [class]="getVerificationIconClass(candidate.verifications.pan)"></i>
-                  </td>
-                  <td>
-                    <i [class]="getVerificationIconClass(candidate.verifications.aadhar)"></i>
-                  </td>
-                  <td>
-                    <i [class]="getVerificationIconClass(candidate.verifications.mobile)"></i>
-                  </td>
-                  <td>
-                    <i [class]="getVerificationIconClass(candidate.verifications.uan)"></i>
-                  </td>
-                  <td>
-                    <i [class]="getVerificationIconClass(candidate.verifications.faceRecognition)"></i>
+                  <td *ngFor="let key of getVerificationKeys()">
+                    <i [class]="getVerificationIconClass(candidate.verifications[key])"></i>
                   </td>
                   <td>
                     <div class="d-flex gap-2">
@@ -446,9 +403,13 @@
                 </tr>
               </tbody>
             </table>
+            
+            <div *ngIf="filteredCandidates.length === 0" class="text-center py-4">
+              <p class="text-muted">No candidates found</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </div> -->
 </div>

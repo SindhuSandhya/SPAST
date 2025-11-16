@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { CdkStepper, CdkStepperModule } from '@angular/cdk/stepper';
 import { NgStepperModule } from 'angular-ng-stepper';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-candidate-details',
@@ -19,9 +19,7 @@ export class CandidateDetailsComponent implements OnInit {
   competencies: any[] = [];
   candidate: any = null;
 
-  constructor(private http: HttpClient,
-    private route: ActivatedRoute
-  ) {}
+  constructor(private http: HttpClient, private route: ActivatedRoute, private router: Router) {}
 
   ngOnInit(): void {
     this.candidate = this.route.snapshot.paramMap.get('candidateId') || '';
@@ -36,29 +34,53 @@ export class CandidateDetailsComponent implements OnInit {
       });
   }
 
+  onBackClick(){
+    this.router.navigate(['/candidates']);
+  }
+
   /**
    * Format the competencies to normalize structure
    * so nested data like addresses and phones display properly.
    */
-  private formatCompetencies() {
-    this.competencies = this.competencies.map((comp) => {
-      const details = { ...comp.details };
+ /**
+ * Format the competencies to normalize structure
+ * so nested data like addresses and phones display properly.
+ */
+private formatCompetencies() {
+  this.competencies = this.competencies.map((comp) => {
+    const details = { ...comp.details };
 
-      // Flatten address arrays (Profile Advanced)
-      if (Array.isArray(details.addresses)) {
-        details.addresses = details.addresses.map((a: any) => ({
-          address: a.detailed_address,
-          pincode: a.pincode,
-          state: a.state,
-        }));
-      }
+    // Special handling for Address Tracing - preserve raw addresses
+    if (comp.competencyName === 'Address Tracing' && Array.isArray(details.addresses)) {
+      details.rawAddresses = [...details.addresses]; // Keep original structure
+    }
 
-      // Flatten phone arrays
-      if (Array.isArray(details.phones)) {
-        details.phones = details.phones.map((p: any) => p.value);
-      }
+    // Handle Profile Advanced and Profile Basic addresses
+    if ((comp.competencyName === 'Profile Advanced' || comp.competencyName === 'Profile Basic') 
+        && Array.isArray(details.addresses)) {
+      details.addresses = details.addresses.map((a: any) => ({
+        address: a.detailed_address || `${a.address1 || ''} ${a.address2 || ''}`,
+        pincode: a.pincode,
+        state: a.state,
+        date_of_reporting: a.date_of_reporting,
+      }));
+    }
 
-      return { ...comp, details };
-    });
-  }
+    // Handle phone numbers
+    if (Array.isArray(details.phones)) {
+      details.phones = details.phones.map((p: any) => p.value || p);
+    }
+
+    // Flatten user_address for DL
+    if (details.user_address && Array.isArray(details.user_address)) {
+      // Keep the original structure, don't flatten
+      details.user_address = details.user_address.map((addr: any) => ({
+        ...addr,
+        completeAddress: addr.completeAddress || `${addr.addressLine1}, ${addr.district}, ${addr.state}, ${addr.country}`
+      }));
+    }
+
+    return { ...comp, details };
+  });
+}
 }

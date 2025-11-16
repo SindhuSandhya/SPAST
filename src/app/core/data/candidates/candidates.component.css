@@ -319,3 +319,45 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .modal-footer {
   background-color: #f8f9fa;  
 }
+
+.fa-file-pdf {
+  color: #dc3545; 
+  font-size: 20px;
+}
+
+.candidate-card {
+  margin: 15px auto;
+  padding: 10px;
+  max-width: 500px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+.modal.show {
+  display: block;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.table-responsive {
+  overflow: visible !important;
+}
+
+.dataTables_wrapper {
+  overflow: visible !important;
+}
+
+.dropdown-menu {
+  position: absolute !important;
+  inset: auto !important;
+  transform: translate3d(0, 0, 0) !important;
+  z-index: 9999 !important;
+}
+
+.table {
+  overflow: visible !important;
+}
+
+.cursor-hand{
+  cursor: pointer;
+}

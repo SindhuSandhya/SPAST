@@ -1,0 +1,43 @@
+<div class="pdf-viewer-container">
+  <div class="header">
+    <h2>PDF Document Viewer</h2>
+    
+
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    <p>Loading PDF...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage" class="error-box">
+    <h3>⚠️ Error</h3>
+    <p>{{ errorMessage }}</p>
+    <button (click)="retryLoad()" class="retry-btn">Retry</button>
+  </div>
+
+  <!-- PDF Viewer -->
+  <div class="viewer-wrapper" *ngIf="!isLoading && !errorMessage">
+    <iframe 
+      *ngIf="viewerUrl && currentViewer !== 'direct'"
+      [src]="viewerUrl"
+      class="pdf-iframe"
+      frameborder="0">
+    </iframe>
+
+    <ngx-doc-viewer 
+      *ngIf="viewerUrl && currentViewer === 'direct'"
+      [url]="viewerUrl" 
+      viewer="url"
+      class="ngx-viewer">
+    </ngx-doc-viewer>
+  </div>
+
+  <div class="info-box" *ngIf="!isLoading && !errorMessage">
+    <p><strong>Using Presigned URL</strong> - Secure temporary access to S3 file</p>
+    <p><strong>File:</strong> {{ fileKey }}</p>
+    <p><strong>Note:</strong> If one viewer doesn't work, try switching to another option above.</p>
+  </div>
+</div>

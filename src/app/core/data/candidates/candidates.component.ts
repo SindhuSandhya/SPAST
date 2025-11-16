@@ -6,6 +6,14 @@ import { environment } from 'src/environments/environment';
 import { BulkImportCandidatesComponent } from './bulk-import-candidates/bulk-import-candidates.component';
 import * as $ from 'jquery';
 import { Router } from '@angular/router';
+import { NgxDocViewerModule } from 'ngx-doc-viewer';
+import { SafeUrlPipe } from 'src/app/pipes/safeUrl.pipe';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as CryptoJS from 'crypto-js';
+import { DomSanitizer } from '@angular/platform-browser';
+import { PdfViewerComponent } from "../pdf-viewer/pdf-viewer.component";
+import { Toast, ToastrService } from 'ngx-toastr';
 
 interface ApiResponse {
   id: string | null;
@@ -17,6 +25,7 @@ interface ApiResponse {
   data: Candidate[] | Candidate;
 }
 interface Candidate {
+  reportUrl: string;
   candidateId: string;
   tenantId: string;
   firstName: string;
@@ -64,13 +73,81 @@ interface DocumentType {
 @Component({
   selector: 'app-candidates',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, BulkImportCandidatesComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, BulkImportCandidatesComponent, SafeUrlPipe, NgxDocViewerModule, PdfViewerComponent],
   templateUrl: './candidates.component.html',
   styleUrls: ['./candidates.component.css']
 })
 export class CandidatesComponent implements OnInit {
+  currentPdfUrl: string = '';
+  candidate: any = {
+    name: 'Uday Kiran Reddy',
+    designation: 'Software Engineer',
+    email: 'kiranreddyuday@gmail.com',
+    phone: '9182078512',
+    birthDate: '2002-01-26',
+    status: 'ACTIVE',
+    documentsVerified: 4,
+    totalDocuments: 5,
+    documents: [
+      {
+        name: 'PAN Card',
+        number: 'ABCDE1234F',
+        icon: '🆔',
+        status: 'VERIFIED',
+        details: {
+          label: 'Valid',
+          value: '✓ | Issued: Income Tax Department'
+        }
+      },
+      {
+        name: 'Aadhaar Card',
+        number: 'XXXX XXXX 9024',
+        icon: '🆔',
+        status: 'VERIFIED',
+        details: {
+          label: 'Valid',
+          value: '✓ | Issued: UIDAI'
+        }
+      }
+    ],
+    education: [
+      {
+        degree: 'B.Tech',
+        institution: 'IIT Delhi',
+        duration: '2018-2022',
+        grade: '85%',
+        status: 'COMPLETED'
+      }
+    ],
+    employment: [
+      {
+        position: 'Software Engineer',
+        company: 'TechCorp',
+        duration: '2022 - Present',
+        location: 'Bangalore',
+        salary: '₹18,00,000',
+        status: 'CURRENT',
+        responsibilities: [
+          'Developed web applications',
+          'Maintained system performance'
+        ]
+      }
+    ],
+    addressDetails: {
+      claimed: 'Xxxxxxxxx, XXXXX, XXXXX, XXXX',
+      verified: 'Xxxxxxxxx, XXXXX, XXXXX, XXXX',
+      status: 'GREEN'
+    },
+    identityDetails: {
+      idType: 'PAN',
+      idNumber: 'ABCDE1234F',
+      status: 'GREEN'
+    }
+  };
+
   candidates: Candidate[] = [];
   showAssignCheckModal = false;
+  showPdfModal = false;
   selectedCompetency: string | null = null;
   assignedCompetencies: any[] = []; // Holds competencies that have been added
   competencies: any[] = []; // List of available competencies
@@ -81,6 +158,7 @@ export class CandidatesComponent implements OnInit {
   candidateDocuments: Document[] = [];
   loading = false;
   error = '';
+  pdfPopup: Window | null = null;
 
   // Form and modal state
   candidateForm: FormGroup;
@@ -125,11 +203,16 @@ export class CandidatesComponent implements OnInit {
     { value: 'PRE_EMPLOYMENT', label: 'Pre Employment' },
     { value: 'POST_EMPLOYMENT', label: 'Post Employment' }
   ];
+  docUrl: string;
+  fileType: string;
+  pdfUrlSafe: any;
 
   constructor(
     private http: HttpClient,
     private formBuilder: FormBuilder,
-    private router: Router
+    private router: Router,
+    private sanitizer: DomSanitizer,
+    public toastr: ToastrService
   ) {
     this.initializeCandidateForm();
   }
@@ -151,6 +234,118 @@ export class CandidatesComponent implements OnInit {
         this.competencies = response['data'];
       }
     });
+  }
+
+  extractS3KeyFromUrl(url: string): string {
+    try {
+      // Parse the URL
+      const urlObj = new URL(url);
+
+      // Get the pathname (everything after the domain)
+      // pathname will be: /QZ2ONJ-%5E%24Qdoq/Sasidhar_Report.pdf
+      let pathname = urlObj.pathname;
+
+      // Remove leading slash
+      if (pathname.startsWith('/')) {
+        pathname = pathname.substring(1);
+      }
+
+      // Decode URL encoding (%5E = ^, %24 = $)
+      const decodedKey = decodeURIComponent(pathname);
+
+      return decodedKey;
+    } catch (error) {
+      console.error('Error extracting S3 key:', error);
+      return '';
+    }
+  }
+
+
+
+  openPdfDocument(candidate: Candidate) {
+    if (candidate.reportUrl != null && candidate.reportUrl !== '') {
+      this.docUrl = this.extractS3KeyFromUrl(candidate.reportUrl);
+      console.log('Extracted S3 Key:', this.docUrl);
+      const fileExtension = this.docUrl.split('.').pop()?.toLowerCase();
+
+      if (fileExtension === 'pdf') {
+        this.fileType = 'pdf';
+      } else if (['jpg', 'jpeg', 'png'].includes(fileExtension)) {
+        this.fileType = 'image';
+      } else {
+        this.fileType = 'document';
+      }
+
+      // Show modal
+      setTimeout(() => {
+        this.showPdfModal = true;
+
+      }, 500);
+
+
+
+      // Set file type based on file extension
+
+    }
+    else {
+      this.toastr.error('Report URL is not available for this candidate.', 'Error');
+      return
+    }
+  }
+
+  //   encryptDataAES(data: string): string {
+  //   // Encrypt the data using AES with ECB mode and PKCS5 padding
+  //   const encrypted = CryptoJS.AES.encrypt(
+  //     CryptoJS.enc.Utf8.parse(data), // Data to be encrypted
+  //     CryptoJS.enc.Utf8.parse(secret), // Secret key
+  //     {
+  //       mode: CryptoJS.mode.ECB, // ECB mode
+  //       padding: CryptoJS.pad.Pkcs7 // PKCS5 padding is Pkcs7 in CryptoJS
+  //     }
+  //   );
+
+  //   // Return the encrypted data as a Base64 encoded string
+  //   return encrypted.toString();
+  // }
+
+  // decryptDataAES(encryptedData: string): string {
+  //   // Decrypt the Base64 encoded string
+  //   const decrypted = CryptoJS.AES.decrypt(
+  //     encryptedData,
+  //     CryptoJS.enc.Utf8.parse(secret),
+  //     {
+  //       mode: CryptoJS.mode.ECB,
+  //       padding: CryptoJS.pad.Pkcs7
+  //     }
+  //   );
+
+  //   // Return the decrypted data as a UTF-8 string
+  //   return decrypted.toString(CryptoJS.enc.Utf8);
+  // }
+
+  viewPdf(fileKeyOrUrl: string): void {
+    // If fileKeyOrUrl is a full S3 link, open directly
+    if (fileKeyOrUrl.startsWith('assets')) {
+      this.docUrl = fileKeyOrUrl;
+      this.showPdfModal = true;
+    }
+    // If it’s a file key, fetch pre-signed URL from backend
+    else {
+      const apiUrl = `http://35.154.101.131:8086/api/files/presigned-url?key=${encodeURIComponent(fileKeyOrUrl)}`;
+      this.http.get<{ url: string }>(apiUrl).subscribe({
+        next: (res) => {
+          this.docUrl = res.url;
+          this.showPdfModal = true;
+        },
+        error: (err) => console.error('Error fetching PDF URL', err)
+      });
+    }
+  }
+
+
+
+  closeViewer() {
+    this.showPdfModal = false;
   }
 
   /**
@@ -217,6 +412,7 @@ export class CandidatesComponent implements OnInit {
 
 
 
+
   initializeCandidateForm() {
     this.candidateForm = this.formBuilder.group({
       candidateId: [''],
@@ -278,6 +474,7 @@ export class CandidatesComponent implements OnInit {
           if (Array.isArray(response.data)) {
             this.candidates = response.data.map((candidate: Candidate) => ({
               candidateId: candidate.candidateId,
+              reportUrl: candidate.reportUrl,
               tenantId: candidate.tenantId,
               firstName: candidate.firstName,
               middleName: candidate.middleName,
@@ -294,6 +491,7 @@ export class CandidatesComponent implements OnInit {
           } else {
             const candidate = response.data as any;
             this.candidates = [{
+              reportUrl: candidate.reportUrl,
               candidateId: candidate.candidateId,
               tenantId: candidate.tenantId,
               firstName: candidate.firstName,
@@ -425,15 +623,44 @@ export class CandidatesComponent implements OnInit {
 
 
   openAssignCheckModal(candidate: any) {
-    this.assignedCompetencies = [];
-    // this.competencies = [];
-
     this.selectedCandidate = candidate;
-    this.showAssignCheckModal = true; // Open the modal
+    this.assignedCompetencies = [];  // Clear previously assigned competencies
+
+    const payload = {
+      candidateId: candidate.candidateId,
+      tenantId: sessionStorage.getItem('tenantId')
+    };
+
+    // Fetch assigned competencies for the candidate
+    this.http.post<any>(`${environment.apiUrl}/candidates/getCandidate`, payload).subscribe((response: any) => {
+      if (response.status.statusCode === 311) {
+        this.assignedCompetencies = response.data.competencies || [];
+        this.showAssignCheckModal = true; // Open the modal
+        const modalElement = document.querySelector('.modal');
+        if (modalElement) {
+          modalElement.setAttribute('aria-hidden', 'false');
+        }
+      } else {
+        console.error('Failed to fetch competencies');
+      }
+    });
+
+
+  }
+  // Check if a competency is already assigned to the candidate
+  isAssignedCompetency(competency: any): boolean {
+    return this.assignedCompetencies.some(c => c.competencyName === competency.competencyName);
   }
 
+
+
+
   closeAssignCheckModal() {
-    this.showAssignCheckModal = false; // Close the modal
+    this.showAssignCheckModal = false;
+    const modalElement = document.querySelector('.modal');
+    if (modalElement) {
+      modalElement.setAttribute('aria-hidden', 'true');
+    }
   }
 
   addCompetencyToTable() {
@@ -446,42 +673,64 @@ export class CandidatesComponent implements OnInit {
     }
   }
 
+  assignCompetency(competency: any) {
+    if (!this.isAssignedCompetency(competency)) {
+      this.assignedCompetencies.push(competency);  // Add to assigned competencies list
+    }
+  }
+
+
   assignCompetencies() {
-    // Prepare payload for API
     const competenciesPayload = this.assignedCompetencies.map((competency) => ({
       competencyName: competency.competencyName,
       competencyId: competency.competencyId.toString(), // Ensure competencyId is a string
-      isVerified: false, // Set the verification status as needed
+      isVerified: false
     }));
 
     const requestData = {
-      tenantId: sessionStorage.getItem('tenantId'),  // Replace with actual tenant ID
-      candidateId: this.selectedCandidate?.candidateId,  // Replace with actual candidate ID
-      competencies: competenciesPayload,
+      tenantId: sessionStorage.getItem('tenantId'),
+      candidateId: this.selectedCandidate.candidateId,
+      competencies: competenciesPayload
     };
 
-    // Make the API call
-    this.http
-      .post(`${environment.apiUrl}/candidates/saveCompetencyCheck`, requestData, {
-        headers: { 'Content-Type': 'application/json' },
-      })
-      .subscribe(
-        (response) => {
-          console.log('Competencies assigned successfully:', response);
-          // Close the modal after successful API call
-          this.showSuccessToast(`Competencies assigned successfully to the candidate ${this.selectedCandidate?.firstName} ${this.selectedCandidate?.lastName}.`);
-          this.closeAssignCheckModal();
-        },
-        (error) => {
-          console.error('Error assigning competencies:', error);
-        }
-      );
+    // Send API request to save assigned competencies
+    this.http.post(`${environment.apiUrl}/candidates/saveCompetencyCheck`, requestData).subscribe(
+      (response) => {
+        console.log('Competencies assigned successfully:', response);
+        this.showSuccessToast('Competencies assigned successfully.');
+        this.closeAssignCheckModal();
+      },
+      (error) => {
+        console.error('Error assigning competencies:', error);
+      }
+    );
+  }
+
+  // openPdfDocument(candidate: Candidate) {
+  //   // Construct the PDF URL - you can modify this based on your URL pattern
+  //   const pdfUrl = `https://qz2onj.s3.ap-south-1.amazonaws.com/QZ2ONJ-Iw1q0A/${candidate.firstName}_Report.pdf`;
+
+  //   // Option 1: Open in new tab (simpler approach)
+  //   window.open(pdfUrl, '_blank');
+
+  //   // Option 2: Open in modal (if you want to keep the modal approach)
+  //   // this.currentCandidate = candidate;
+  //   // this.currentPdfUrl = pdfUrl;
+  //   // this.showPdfModal = true;
+  // }
+
+  closePdfModal() {
+    this.showPdfModal = false;
+    this.currentPdfUrl = '';
   }
 
   removeCompetency(competency: any) {
-    const index = this.assignedCompetencies.indexOf(competency);
+    const index = this.assignedCompetencies.findIndex(
+      (c) => c.competencyId === competency.competencyId
+    );
+
     if (index > -1) {
-      this.assignedCompetencies.splice(index, 1); // Remove competency
+      this.assignedCompetencies.splice(index, 1);
     }
   }
 

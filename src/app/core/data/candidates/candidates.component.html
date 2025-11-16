@@ -74,18 +74,22 @@
                   <th>Gender</th>
                   <!-- <th>Date of Birth</th> -->
                   <th>Status</th>
+                  <th>View PDF</th>
+
                   <th>Actions</th>
+
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let candidate of paginatedCandidates; trackBy: trackByCandidateId">
-                  <td >
-                    <a style="cursor: pointer;text-decoration: underline;" (click)="onClickCandidateDetails(candidate)" class="text-primary">
+                  <td class="fw-bold">
+                    <a style="cursor: pointer;text-decoration: underline;" (click)="onClickCandidateDetails(candidate)"
+                      class="text-primary">
                       {{ candidate.candidateId }}
                     </a>
                   </td>
-                  <td  class="fw-bold">
-                      {{ candidate.fullName ? candidate.fullName : candidate.firstName + ' ' + candidate.lastName }}
+                  <td class="fw-bold">
+                    {{ candidate.fullName ? candidate.fullName : candidate.firstName + ' ' + candidate.lastName }}
                     <div class="text-muted small">{{ candidate.fatherName }}</div>
                   </td>
                   <td>
@@ -120,6 +124,9 @@
                       <i class="mdi mdi-close-circle me-1"></i>-
                     </span> -->
                   </td>
+
+                  <td (click)="openPdfDocument(candidate)" class="cursor-hand"><i class="fas fa-file-pdf"></i></td>
+
                   <td>
                     <div class="dropdown">
                       <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
@@ -470,6 +477,24 @@
     </div>
   </div>
 
+  <div class="modal fade" [class.show]="showPdfModal" [style.display]="showPdfModal ? 'block' : 'none'" tabindex="-1"
+    role="dialog" aria-labelledby="pdfModalLabel" [attr.aria-hidden]="!showPdfModal">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="pdfModalLabel">
+            <i class="mdi mdi-file-pdf me-2"></i>Document Viewer
+          </h4>
+          <button type="button" class="btn-close" (click)="closePdfModal()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+         <app-pdf-viewer [fileKey]="docUrl"></app-pdf-viewer>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Delete Confirmation Modal -->
   <div class="modal fade" [class.show]="showDeleteModal" [style.display]="showDeleteModal ? 'block' : 'none'"
     tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" [attr.aria-hidden]="!showDeleteModal">
@@ -507,26 +532,15 @@
 
 
   <div class="modal fade" [class.show]="showAssignCheckModal" [style.display]="showAssignCheckModal ? 'block' : 'none'"
-    tabindex="-1" aria-labelledby="assignCheckModalLabel" aria-hidden="true">
+    tabindex="-1" aria-labelledby="assignCheckModalLabel" aria-hidden="false">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="assignCheckModalLabel">Assign Check</h5>
           <button type="button" class="btn-close" (click)="closeAssignCheckModal()" aria-label="Close"></button>
         </div>
-        <div class="modal-body">
-          <!-- Competency Dropdown -->
-          <div class="form-group">
-            <label for="competencyDropdown">Select Competency</label>
-            <select id="competencyDropdown" class="form-control" [(ngModel)]="selectedCompetency">
-              <option *ngFor="let competency of competencies" [value]="competency.competencyId">
-                {{ competency.competencyName }}
-              </option>
-            </select>
-          </div>
-          <!-- Add Button -->
-          <button type="button" class="btn btn-primary mt-3" (click)="addCompetencyToTable()">+</button>
 
+        <div class="modal-body">
           <!-- Assigned Competencies Table -->
           <table class="table mt-3">
             <thead>
@@ -536,25 +550,33 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of assignedCompetencies">
-                <td>{{ item.competencyName }}</td>
+              <tr *ngFor="let competency of competencies">
+                <td>{{ competency.competencyName }}</td>
                 <td>
-                  <button class="btn btn-danger btn-sm" (click)="removeCompetency(item)">Remove</button>
+                  <!-- Show 'Remove' if competency is already assigned -->
+                  <button *ngIf="isAssignedCompetency(competency)" class="btn btn-danger btn-sm"
+                    (click)="removeCompetency(competency)">
+                    Remove
+                  </button>
+                  <!-- Show 'Assign' if competency is not yet assigned -->
+                  <button *ngIf="!isAssignedCompetency(competency)" class="btn btn-primary btn-sm"
+                    (click)="assignCompetency(competency)">
+                    Assign
+                  </button>
                 </td>
               </tr>
             </tbody>
           </table>
-        </div>
 
-        <div class="modal-footer">
-          <button class="btn btn-success" *ngIf="assignedCompetencies.length > 0" (click)="assignCompetencies()">Assign
-            Competency</button>
-
-          <button type="button" class="btn btn-secondary" (click)="closeAssignCheckModal()">Close</button>
+          <!-- Assign Competencies Button -->
+          <button *ngIf="assignedCompetencies.length > 0" class="btn btn-success mt-3" (click)="assignCompetencies()">
+            Assign Competency
+          </button>
         </div>
       </div>
     </div>
   </div>
+
 
 
 

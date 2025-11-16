@@ -66,21 +66,39 @@ export class SidebarComponent implements OnInit, AfterViewInit, OnChanges {
     // ✅ Get the user role — assuming it’s stored in localStorage after login
     this.userRole = localStorage.getItem('userRole') || 'TenantUser';
 
-    // ✅ Filter menu items based on role
-    if (this.userRole === 'super-admin') {
-      // super-admin → Only Dashboard + Tenants
-      this.menuItems = MENU.filter(
-        (item) => item.label === 'Dashboard' || item.label === 'Tenants' 
-      );
-    } else if (this.userRole === 'TenantUser') {
-      // TenantUser → All except Tenants
-      this.menuItems = MENU.filter(
-        (item) => item.label !== 'Tenants'
-      );
-    } else {
-      // fallback → show minimal safe menu
-      this.menuItems = MENU.filter((item) => item.label === 'Dashboard');
+    // Build menu according to role rules:
+    // - super-admin: Dashboard, Tenants, Configuration (with Competencies + Users)
+    // - TenantUser: Dashboard, Configuration (with Competencies only)
+    const role = this.userRole;
+
+    const allowedTop = ['Dashboard', 'Configuration'];
+    if (role === 'super-admin') {
+      // super-admin should also see Tenants
+      allowedTop.push('Tenants');
     }
+
+    // TenantUser should additionally see Candidates
+    if (role === 'TenantUser') {
+      allowedTop.push('Candidates');
+    }
+
+    // Filter top-level items and clone Configuration subitems per role
+    this.menuItems = MENU
+      .filter((item) => allowedTop.includes(item.label))
+      .map((item) => {
+        // deep clone basic item to avoid mutating original MENU
+        const newItem: any = { ...item };
+        if (newItem.subItems && newItem.subItems.length) {
+          if (role === 'super-admin') {
+            // super-admin sees both Competencies and Users (no filtering)
+            newItem.subItems = newItem.subItems.filter((s) => ['Competencies', 'Users'].includes(s.label));
+          } else {
+            // TenantUser sees only Competencies
+            newItem.subItems = newItem.subItems.filter((s) => s.label === 'Competencies');
+          }
+        }
+        return newItem as MenuItem;
+      });
   }
 
   toggleMenu(event) {

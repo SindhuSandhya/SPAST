@@ -55,7 +55,7 @@
   position: relative;
 }
 
-.wizard > .cdk-step-header {
+.wizard>.cdk-step-header {
   display: flex;
   align-items: center;
   margin-bottom: 20px;
@@ -114,6 +114,12 @@
 .cdk-step-header.cdk-step-header-selected .step-label {
   background-color: #e6e9fb;
   color: #1e40af;
+}
+
+.backButton {
+  position: absolute;
+  right: 10px;
+  top: 12.5rem;
 }
 
 

@@ -24,107 +24,296 @@
                     </div>
                 </div>
             </div>
-
+            <button class="btn btn-primary backButton" (click)="onBackClick()">Back to Candidates</button>
+            <br>
+            <br>
             <!-- ========================= -->
             <!-- Competency Stepper Wizard -->
             <!-- ========================= -->
             <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title mb-4">Competency Verification Wizard</h4>
+                    <ng-container *ngIf="competencies.length === 0">
+                        <div class="alert alert-info">
+                            No competency data available for this candidate.
+                        </div>
+                    </ng-container>
+                    <ng-container *ngIf="competencies.length > 0">
+                        <h4 class="card-title mb-4 ">Competency Verification Wizard</h4>
 
-                    <ng-stepper #cdkStepper [linear]="false" class="wizard">
+                        <ng-stepper #cdkStepper [linear]="false" class="wizard">
 
-                        <!-- Dynamic Competencies -->
-                        <cdk-step *ngFor="let comp of competencies; let i = index">
-                            <ng-template cdkStepLabel>
-                                <span class="number">{{ i + 1 }}.</span>
-                                <span>{{ comp.competencyName }}</span>
-                            </ng-template>
+                            <!-- Dynamic Competencies -->
+                            <cdk-step *ngFor="let comp of competencies; let i = index">
+                                <ng-template cdkStepLabel>
+                                    <span class="number">{{ i + 1 }}.</span>
+                                    <span>{{ comp.competencyName }}</span>
+                                </ng-template>
 
-                            @if(cdkStepper.selectedIndex === i){
-                            <section>
+                                <section *ngIf="cdkStepper.selectedIndex === i">
 
-                                <!-- ===== MOBILE 360 (Flat key-values) ===== -->
-                                <div *ngIf="comp.competencyName === 'Mobile 360'">
-                                    <h5 class="text-primary fw-semibold mb-3">Mobile 360 Details</h5>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-2"><b>Address:</b> {{ comp.details.address }}</div>
-                                        <div class="col-md-6 mb-2"><b>Bank Name:</b> {{ comp.details.bankName }}</div>
-                                        <div class="col-md-6 mb-2"><b>Branch:</b> {{ comp.details.branch }}</div>
-                                        <div class="col-md-6 mb-2"><b>Contact:</b> {{ comp.details.contact }}</div>
-                                    </div>
-                                </div>
+                                    <!-- ===== MOBILE 360 ===== -->
+                                    <div *ngIf="comp.competencyName === 'Mobile 360'">
+                                        <h5 class="text-primary fw-semibold mb-4">Mobile 360 Details</h5>
 
-                                <!-- ===== PROFILE ADVANCED (Address + Phone separate) ===== -->
-                                <div *ngIf="comp.competencyName === 'Profile Advanced'">
-                                    <!-- Summary Section -->
-                                    <div class="row mb-3">
-                                        <div class="col-md-4 mb-2"><b>Age:</b> {{ comp.details.age }}</div>
-                                        <div class="col-md-4 mb-2"><b>Income:</b> {{ comp.details.income }}</div>
-                                        <div class="col-md-4 mb-2"><b>Date of Birth:</b> {{ comp.details.date_of_birth
-                                            }}</div>
-                                    </div>
+                                        <!-- Basic Information -->
+                                        <div class="row mb-3">
+                                            <div class="col-md-4 mb-2"><b>Name:</b> {{ comp.details.name || 'N/A' }}
+                                            </div>
+                                            <div class="col-md-4 mb-2"><b>Contact:</b> {{ comp.details.contact || 'N/A'
+                                                }}
+                                            </div>
+                                            <div class="col-md-4 mb-2"><b>Number Valid:</b> {{ comp.details.numberValid
+                                                ||
+                                                'N/A' }}</div>
+                                            <div class="col-md-4 mb-2"><b>Mobile Age:</b> {{ comp.details.mobileAge ||
+                                                'N/A'
+                                                }}</div>
+                                            <div class="col-md-4 mb-2"><b>Consumer ID:</b> {{ comp.details.consumerId ||
+                                                'N/A' }}</div>
+                                            <div class="col-md-4 mb-2"><b>Agency:</b> {{ comp.details.agency || 'N/A' }}
+                                            </div>
+                                        </div>
 
-                                    <!-- Address Details -->
-                                    <div *ngIf="comp.details.addresses?.length" class="mt-4">
-                                        <h5 class="text-primary fw-semibold mb-3">Address Details</h5>
-                                        <div *ngFor="let addr of comp.details.addresses; let j = index"
-                                            class="border rounded shadow-sm p-3 mb-3 bg-light">
-                                            <h6 class="fw-semibold mb-2">Address {{ j + 1 }}</h6>
-                                            <p class="mb-1">{{ addr.address }}</p>
-                                            <p class="text-muted small mb-0">
-                                                <b>State:</b> {{ addr.state || 'N/A' }} |
-                                                <b>Pincode:</b> {{ addr.pincode || 'N/A' }}
-                                            </p>
+                                        <!-- Bank Details -->
+                                        <div *ngIf="comp.details.bankName || comp.details.branch" class="mt-4">
+                                            <h6 class="text-primary fw-semibold mb-3">Bank Details</h6>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-2"><b>Bank Name:</b> {{ comp.details.bankName ||
+                                                    'N/A' }}</div>
+                                                <div class="col-md-6 mb-2"><b>Branch:</b> {{ comp.details.branch ||
+                                                    'N/A' }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Address Details -->
+                                        <div *ngIf="comp.details.address" class="mt-4">
+                                            <h6 class="text-primary fw-semibold mb-3">Address</h6>
+                                            <div class="border rounded shadow-sm p-3 bg-light">
+                                                <p class="mb-0">{{ comp.details.address }}</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- WhatsApp Status -->
+                                        <div *ngIf="comp.details.whatsAppStatus" class="mt-4">
+                                            <h6 class="text-primary fw-semibold mb-3">WhatsApp Information</h6>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-2"><b>WhatsApp Status:</b> {{
+                                                    comp.details.whatsAppStatus || 'N/A' }}</div>
+                                                <div class="col-md-6 mb-2"><b>Business Status:</b> {{
+                                                    comp.details.whatsAppBusinessStatus || 'N/A' }}</div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <!-- Phone Numbers -->
-                                    <div *ngIf="comp.details.phones?.length" class="mt-4">
-                                        <h5 class="text-primary fw-semibold mb-3">Contact Numbers</h5>
-                                        <div class="row">
-                                            <div class="col-md-4" *ngFor="let ph of comp.details.phones">
-                                                <div
-                                                    class="border p-2 rounded bg-white shadow-sm d-flex align-items-center">
-                                                    <i class="mdi mdi-phone text-success me-2 fs-5"></i>
-                                                    <span>{{ ph }}</span>
+                                    <div *ngIf="comp.competencyName === 'LPG Verification (Mobile)'">
+                                        <h5 class="text-primary fw-semibold mb-4">LPG Verification (Mobile) Details</h5>
+                                        <div *ngIf="comp.details.gasInfo?.length">
+                                            <h6 class="text-primary fw-semibold mb-3">Gas Info Details</h6>
+                                            <div *ngFor="let item of comp.details.gasInfo"
+                                                class="border rounded shadow-sm p-3 mb-3 bg-light">
+                                                <p><b>Agency:</b> {{ item.Agency || 'N/A' }}</p>
+                                                <p><b>Address:</b> {{ item.address || 'N/A' }}</p>
+                                                <p><b>Consumer ID:</b> {{ item.consumerId || 'N/A' }}</p>
+                                                <p><b>Name:</b> {{ item.name || 'N/A' }}</p>
+                                                <p><b>Contact:</b> {{ item.contact1 || 'N/A' }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                    <!-- ===== PROFILE ADVANCED ===== -->
+                                    <div *ngIf="comp.competencyName === 'Profile Advance'">
+                                        <h5 class="text-primary fw-semibold mb-4">Profile Advanced Details</h5>
+
+                                        <!-- Summary Section -->
+                                        <div class="row mb-3">
+                                            <div class="col-md-4 mb-2"><b>Age:</b> {{ comp.details.age || 'N/A' }}</div>
+                                            <div class="col-md-4 mb-2"><b>Income:</b> {{ comp.details.income || 'N/A' }}
+                                            </div>
+                                            <div class="col-md-4 mb-2"><b>Date of Birth:</b> {{
+                                                comp.details.date_of_birth
+                                                || 'N/A' }}</div>
+                                        </div>
+
+                                        <!-- Address Details -->
+                                        <div *ngIf="comp.details.addresses?.length" class="mt-4">
+                                            <h6 class="text-primary fw-semibold mb-3">Address Details</h6>
+                                            <div *ngFor="let addr of comp.details.addresses; let j = index"
+                                                class="border rounded shadow-sm p-3 mb-3 bg-light">
+                                                <h6 class="fw-semibold mb-2">Address {{ j + 1 }}</h6>
+                                                <p class="mb-1">{{ addr.address || addr.detailed_address }}</p>
+                                                <p class="text-muted small mb-0">
+                                                    <b>State:</b> {{ addr.state || 'N/A' }} |
+                                                    <b>Pincode:</b> {{ addr.pincode || 'N/A' }}
+                                                    <span *ngIf="addr.date_of_reporting"> | <b>Reporting Date:</b> {{
+                                                        addr.date_of_reporting }}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Phone Numbers -->
+                                        <div *ngIf="comp.details.phones?.length" class="mt-4">
+                                            <h6 class="text-primary fw-semibold mb-3">Contact Numbers</h6>
+                                            <div class="row">
+                                                <div class="col-md-4 mb-2" *ngFor="let ph of comp.details.phones">
+                                                    <div
+                                                        class="border p-2 rounded bg-white shadow-sm d-flex align-items-center">
+                                                        <i class="mdi mdi-phone text-success me-2 fs-5"></i>
+                                                        <span>{{ ph }}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <!-- ===== DEFAULT (for other competencies) ===== -->
-                                <div
-                                    *ngIf="comp.competencyName !== 'Mobile 360' && comp.competencyName !== 'Profile Advanced'">
-                                    <h5 class="text-primary fw-semibold mb-3">{{ comp.competencyName }} Details</h5>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-2" *ngFor="let field of (comp.details | keyvalue)">
-                                            <b>{{ field.key | titlecase }}:</b> {{ field.value }}
+                                    <!-- ===== PROFILE BASIC ===== -->
+                                    <div *ngIf="comp.competencyName === 'Profile Basic'">
+                                        <h5 class="text-primary fw-semibold mb-4">Profile Basic Details</h5>
+
+                                        <!-- Summary Section -->
+                                        <div class="row mb-3">
+                                            <div class="col-md-4 mb-2"><b>Age:</b> {{ comp.details.age || 'N/A' }}</div>
+                                            <div class="col-md-4 mb-2"><b>Income:</b> {{ comp.details.income || 'N/A' }}
+                                            </div>
+                                            <div class="col-md-4 mb-2"><b>Date of Birth:</b> {{
+                                                comp.details.date_of_birth
+                                                || 'N/A' }}</div>
+                                        </div>
+
+                                        <!-- Address Details -->
+                                        <div *ngIf="comp.details.addresses?.length" class="mt-4">
+                                            <h6 class="text-primary fw-semibold mb-3">Address Details</h6>
+                                            <div *ngFor="let addr of comp.details.addresses; let j = index"
+                                                class="border rounded shadow-sm p-3 mb-3 bg-light">
+                                                <h6 class="fw-semibold mb-2">Address {{ j + 1 }}</h6>
+                                                <p class="mb-1">{{ addr.address || addr.detailed_address }}</p>
+                                                <p class="text-muted small mb-0">
+                                                    <b>State:</b> {{ addr.state || 'N/A' }} |
+                                                    <b>Pincode:</b> {{ addr.pincode || 'N/A' }}
+                                                    <span *ngIf="addr.date_of_reporting"> | <b>Reporting Date:</b> {{
+                                                        addr.date_of_reporting }}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Phone Numbers -->
+                                        <div *ngIf="comp.details.phones?.length" class="mt-4">
+                                            <h6 class="text-primary fw-semibold mb-3">Contact Numbers</h6>
+                                            <div class="row">
+                                                <div class="col-md-4 mb-2" *ngFor="let ph of comp.details.phones">
+                                                    <div
+                                                        class="border p-2 rounded bg-white shadow-sm d-flex align-items-center">
+                                                        <i class="mdi mdi-phone text-success me-2 fs-5"></i>
+                                                        <span>{{ ph }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <!-- Navigation Buttons -->
+                                    <!-- ===== MOBILE TO DL ADVANCE ===== -->
+                                    <div *ngIf="comp.competencyName === 'Mobile to DL Advance'">
+                                        <h5 class="text-primary fw-semibold mb-4">Driving License Details</h5>
 
-                                <ul class="list-inline wizard d-flex justify-content-end mt-6 mb-0">
-                                    <li class="previous list-inline-item">
-                                        <button class="btn btn-light" cdkStepperPrevious
-                                            ngStepperPrevious>Previous</button>
+                                        <!-- Basic Information -->
+                                        <div class="row mb-3">
+                                            <div class="col-md-4 mb-2"><b>Name:</b> {{ comp.details.name || 'N/A' }}
+                                            </div>
+                                            <div class="col-md-4 mb-2"><b>DL Number:</b> {{
+                                                comp.details.drivingLicenseNumber || 'N/A' }}</div>
+                                            <div class="col-md-4 mb-2"><b>Date of Birth:</b> {{ comp.details.dob ||
+                                                'N/A' }}
+                                            </div>
+                                            <div class="col-md-4 mb-2"><b>Status:</b> {{ comp.details.status || 'N/A' }}
+                                            </div>
+                                            <div class="col-md-4 mb-2"><b>Valid From:</b> {{ comp.details.validityFrom
+                                                ||
+                                                'N/A' }}</div>
+                                            <div class="col-md-4 mb-2"><b>Valid To:</b> {{ comp.details.validityTo ||
+                                                'N/A'
+                                                }}</div>
+                                        </div>
 
-                                    </li>
-                                    <li class="next list-inline-item" *ngIf="i < competencies.length - 1">
-                                        <button class="btn btn-primary" cdkStepperNext ngStepperNext>Next</button>
-                                    </li>
-                                    <li class="next list-inline-item" *ngIf="i === competencies.length - 1">
-                                        <button class="btn btn-success">Finish</button>
-                                    </li>
-                                </ul>
-                            </section>
-                            }
-                        </cdk-step>
+                                        <!-- Address Details -->
+                                        <div *ngIf="comp.details.user_address?.length" class="mt-4">
+                                            <h6 class="text-primary fw-semibold mb-3">Address Details</h6>
+                                            <div *ngFor="let addr of comp.details.user_address; let j = index"
+                                                class="border rounded shadow-sm p-3 mb-3 bg-light">
+                                                <h6 class="fw-semibold mb-2">{{ addr.type || 'Address ' + (j + 1) }}
+                                                </h6>
+                                                <p class="mb-1">{{ addr.completeAddress || addr }}</p>
+                                                <p class="text-muted small mb-0"
+                                                    *ngIf="addr.state || addr.pin || addr.country">
+                                                    <span *ngIf="addr.state"><b>State:</b> {{ addr.state }}</span>
+                                                    <span *ngIf="addr.pin"> | <b>PIN:</b> {{ addr.pin }}</span>
+                                                    <span *ngIf="addr.country"> | <b>Country:</b> {{ addr.country
+                                                        }}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                    </ng-stepper>
+                                    <!-- ===== ADDRESS TRACING ===== -->
+                                    <div *ngIf="comp.competencyName === 'Address Tracing'">
+                                        <h5 class="text-primary fw-semibold mb-4">Address Tracing Details</h5>
+
+                                        <!-- Address Details -->
+                                        <div *ngIf="comp.details.addresses?.length">
+                                            <div *ngFor="let addr of comp.details.addresses; let j = index"
+                                                class="border rounded shadow-sm p-3 mb-3 bg-light">
+                                                <h6 class="fw-semibold mb-2">Address {{ j + 1 }}</h6>
+                                                <p class="mb-1">{{ addr.address1 || '' }} {{ addr.address2 || '' }}</p>
+                                                <div class="text-muted small">
+                                                    <span *ngIf="addr.mobile"><b>Mobile:</b> {{ addr.mobile }}</span>
+                                                    <span *ngIf="addr.created_at"> | <b>Created:</b> {{ addr.created_at
+                                                        |
+                                                        date:'short' }}</span>
+                                                    <span *ngIf="addr.last_delivery_at"> | <b>Last Delivery:</b> {{
+                                                        addr.last_delivery_at | date:'short' }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div *ngIf="!comp.details.addresses?.length" class="alert alert-info">
+                                            No address tracing data available.
+                                        </div>
+                                    </div>
+
+                                    <!-- ===== DEFAULT (for other competencies) ===== -->
+                                    <div *ngIf="comp.competencyName !== 'Mobile 360' && 
+                                            comp.competencyName !== 'Profile Advance' && 
+                                            comp.competencyName !== 'LPG Verification (Mobile)' && 
+                                            comp.competencyName !== 'Profile Basic' && 
+                                            comp.competencyName !== 'Mobile to DL Advance' && 
+                                            comp.competencyName !== 'Address Tracing'">
+                                        <h5 class="text-primary fw-semibold mb-3">{{ comp.competencyName }} Details</h5>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-2" *ngFor="let field of (comp.details | keyvalue)">
+                                                <b>{{ field.key | titlecase }}:</b> {{ field.value }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Navigation Buttons -->
+                                    <ul class="list-inline wizard d-flex justify-content-end mt-6 mb-0">
+                                        <li class="previous list-inline-item">
+                                            <button class="btn btn-light" cdkStepperPrevious
+                                                ngStepperPrevious>Previous</button>
+                                        </li>
+                                        <li class="next list-inline-item" *ngIf="i < competencies.length - 1">
+                                            <button class="btn btn-primary" cdkStepperNext ngStepperNext>Next</button>
+                                        </li>
+                                        <li class="next list-inline-item" *ngIf="i === competencies.length - 1">
+                                            <button class="btn btn-success" (click)="onBackClick()">Finish</button>
+                                        </li>
+                                    </ul>
+                                </section>
+                            </cdk-step>
+
+                        </ng-stepper>
+                    </ng-container>
+
                 </div>
             </div>
 

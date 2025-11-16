@@ -14,7 +14,7 @@ interface Competency {
   selector: 'app-competency-list',
   templateUrl: './competency-list.component.html',
   styleUrls: ['./competency-list.component.css'],
-  imports: [CommonModule,FormsModule],
+  imports: [CommonModule, FormsModule],
   standalone: true
 })
 export class CompetencyListComponent implements OnInit {
@@ -31,7 +31,7 @@ export class CompetencyListComponent implements OnInit {
   selectedCompetency?: Competency;
   successMessage = '';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   ngOnInit(): void {
     this.fetchCompetencies();
@@ -40,25 +40,52 @@ export class CompetencyListComponent implements OnInit {
   /** Fetch master competencies */
   fetchCompetencies() {
     this.loading = true;
-    this.http.get<any>(`${environment.apiUrl}/competencies/getAllCompetencies?tenantId=${this.tenantId}`)
-      .subscribe({
-        next: (res) => {
-          if (res && res.status?.statusCode === 302 && Array.isArray(res.data)) {
-            this.competencies = res.data.map((c: any) => ({
-              competencyId: c.competencyId,
-              competencyName: c.competencyName,
-              isActive: c.isActive
-            }));
-          } else {
-            this.competencies = [];
-          }
+    const baseUrl = `${environment.apiUrl}/competencies/getAllCompetencies`;
+
+    this.http.get<any>(baseUrl).subscribe({
+      next: (res) => {
+        // Check if response has valid data
+        if (res && res.status?.statusCode === 302 && Array.isArray(res.data) && res.data.length == 0) {
+          this.competencies = res.data.map((c: any) => ({
+            competencyId: c.competencyId,
+            competencyName: c.competencyName,
+            isActive: c.isActive
+          }));
           this.loading = false;
-        },
-        error: () => {
-          this.loading = false;
+        } else {
+          // Response is null or empty — retry with tenantId as query param again (fallback)
+          this.retryFetchCompetencies(baseUrl);
         }
-      });
+      },
+      error: () => {
+        this.loading = false;
+      }
+    });
   }
+
+  private retryFetchCompetencies(baseUrl: string) {
+    const retryUrl = `${baseUrl}?tenantId=${this.tenantId}`;
+    console.warn('Retrying fetchCompetencies with tenantId query param:', retryUrl);
+
+    this.http.get<any>(retryUrl).subscribe({
+      next: (res) => {
+        if (res && res.status?.statusCode === 302 && Array.isArray(res.data) && res.data.length > 0) {
+          this.competencies = res.data.map((c: any) => ({
+            competencyId: c.competencyId,
+            competencyName: c.competencyName,
+            isActive: c.isActive
+          }));
+        } else {
+          this.competencies = [];
+        }
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+      }
+    });
+  }
+
 
   /** Open save confirmation modal */
   openSaveModal() {

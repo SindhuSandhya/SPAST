@@ -30,12 +30,7 @@ export const routes: Routes = [
                 canActivate: [AuthGuard, RoleGuard],
                 data: { role: 'super-admin' } // ❗Only super-admin
             },
-            {
-                path: "users",
-                component: UsersComponent,
-                canActivate: [AuthGuard, RoleGuard],
-                data: { role: 'TenantUser' } // ❗Only TenantUser
-            },
+
             {
                 path: "candidates",
                 component: CandidatesComponent,
@@ -50,7 +45,13 @@ export const routes: Routes = [
                 canActivate: [AuthGuard, RoleGuard],
                 data: { role: 'TenantUser' },
                 children: [
-                    { path: 'competency-list', component: CompetencyListComponent }
+                    { path: 'competency-list', component: CompetencyListComponent },
+                    {
+                        path: "users",
+                        component: UsersComponent,
+                        canActivate: [AuthGuard, RoleGuard],
+                        data: { role: 'super-admin' } // ❗Only super-admin
+                    },
                 ]
             },
         ]
