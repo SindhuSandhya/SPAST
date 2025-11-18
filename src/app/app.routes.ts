@@ -43,7 +43,7 @@ export const routes: Routes = [
             {
                 path: 'configuration',
                 canActivate: [AuthGuard, RoleGuard],
-                data: { role: 'TenantUser' },
+                data: { role: ['TenantUser', 'super-admin'] }, // Both roles can access
                 children: [
                     { path: 'competency-list', component: CompetencyListComponent },
                     {

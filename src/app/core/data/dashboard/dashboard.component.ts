@@ -110,6 +110,8 @@ export class DashboardComponent implements OnInit {
   };
 
   verificationTypeStats: { [key: string]: VerificationStats } = {};
+  // Keep original labels from API (competencyName) for display
+  verificationTypeLabels: { [key: string]: string } = {};
 
   candidates: Candidate[] = [];
   filteredCandidates: Candidate[] = [];
@@ -417,6 +419,9 @@ export class DashboardComponent implements OnInit {
         pending: comp.pendingCount,
         failed: 0 // API doesn't provide failed count, defaulting to 0
       };
+
+      // Store the original competencyName for display (label)
+      this.verificationTypeLabels[mappedName] = comp.competencyName;
 
       totalVerified += comp.verifiedCount;
       totalPending += comp.pendingCount;

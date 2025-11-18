@@ -130,7 +130,13 @@ export class UsersComponent implements OnInit {
         // FIXED: Check for status code 103 instead of 200
         if ([103, 200].includes(response.status.statusCode) && response.data) {
           this.users = Array.isArray(response.data) ? response.data : [response.data];
-          console.log('Loaded users:', this.users); // Debug log
+          // Sort users by createdOn descending (latest first)
+          this.users.sort((a, b) => {
+            const dateA = new Date(a.createdOn).getTime();
+            const dateB = new Date(b.createdOn).getTime();
+            return dateB - dateA;
+          });
+          console.log('Loaded users (sorted):', this.users); // Debug log
           this.applyFilter();
         } else {
           this.error = response.status.statusMessage || 'Failed to load users';

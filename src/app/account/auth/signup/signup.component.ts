@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, Input } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
@@ -19,6 +19,9 @@ import { DuplicateCheckService } from 'src/app/core/services/duplicateService.se
   imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule]
 })
 export class SignupComponent implements OnInit {
+
+  @Output() tenantCreated = new EventEmitter<void>();
+  @Input() isModal = false; // Flag to indicate if component is used in modal
 
   signupForm: UntypedFormGroup;
   submitted: boolean = false;
@@ -166,7 +169,13 @@ export class SignupComponent implements OnInit {
         this.successmsg = '🎉 Registration successful!';
         this.error = '';
         this.submitted = false;
-        setTimeout(() => this.router.navigate(['/tenants']), 2000); // navigate after 2 sec
+        
+        // If component is used in modal, emit event instead of redirecting
+        if (this.isModal) {
+          this.tenantCreated.emit();
+        } else {
+          setTimeout(() => this.router.navigate(['/tenants']), 2000); // navigate after 2 sec
+        }
       },
       error: (err) => {
         console.error('Registration error:', err);

@@ -125,7 +125,7 @@
                     </span> -->
                   </td>
 
-                  <td (click)="openPdfDocument(candidate)" class="cursor-hand"><i class="fas fa-file-pdf"></i></td>
+                  <td  (click)="openPdfDocument(candidate)" class="cursor-hand"><i class="fas fa-file-pdf" *ngIf="candidate.reportUrl"  ></i></td>
 
                   <td>
                     <div class="dropdown">

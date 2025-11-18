@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, TemplateRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { SignupComponent } from '../../../account/auth/signup/signup.component';
 
 interface ApiResponse {
   id: string | null;
@@ -36,7 +37,7 @@ interface Tenant {
 @Component({
   selector: 'app-tenants',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, SignupComponent],
   templateUrl: './tenants.component.html',
   styleUrls: ['./tenants.component.css']
 })
@@ -52,6 +53,9 @@ export class TenantsComponent implements OnInit {
   editLoading = false;
   editError = '';
   currentTenant: Tenant | null = null;
+
+  // Add Tenant modal state
+  showAddModal = false;
 
   // Success message state
   successMessage = '';
@@ -96,6 +100,12 @@ export class TenantsComponent implements OnInit {
       next: (response) => {
         if (response.status.statusCode === 203 && response.data) {
           this.tenants = response.data;
+          // Sort by createdOn in descending order (latest first)
+          this.tenants.sort((a, b) => {
+            const dateA = new Date(a.createdOn).getTime();
+            const dateB = new Date(b.createdOn).getTime();
+            return dateB - dateA; // descending order
+          });
           this.applyFilter();
         } else {
           this.error = response.status.statusMessage || 'Failed to load tenants';
@@ -345,6 +355,23 @@ export class TenantsComponent implements OnInit {
       console.log('Delete tenant:', tenant);
       // Implement delete functionality
     }
+  }
+
+  // Open Add Tenant modal
+  openAddModal() {
+    this.showAddModal = true;
+  }
+
+  // Close Add Tenant modal
+  closeAddModal() {
+    this.showAddModal = false;
+  }
+
+  // Handle tenant created from signup modal
+  onTenantCreated() {
+    this.closeAddModal();
+    this.showSuccessToast('Tenant has been created successfully!');
+    this.loadTenants(); // Refresh the list
   }
 
   // TrackBy function for better performance

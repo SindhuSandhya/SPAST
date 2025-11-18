@@ -36,7 +36,7 @@ export const MENU: MenuItem[] = [
                 id: 3,
                 label: 'Users',
                 icon: 'bx bx-user-plus',
-                link: '/users',
+                link: '/configuration/users',
 
             }
         ]
